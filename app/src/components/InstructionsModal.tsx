@@ -2,9 +2,11 @@ import { Modal } from './Modal'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mb-5">
-      <h3 className="mb-1.5 text-sm font-bold uppercase tracking-wide text-amber-300">{title}</h3>
-      <div className="space-y-2 text-sm leading-relaxed text-white/85">{children}</div>
+    <section className="mb-5 border-b border-dashed border-[var(--parchment-lo)] pb-4 last:border-b-0">
+      <h3 className="ptc-headline mb-1.5 text-sm" style={{ color: 'var(--red)' }}>
+        {title}
+      </h3>
+      <div className="ptc-mono space-y-2 text-sm leading-relaxed text-[var(--ink)]">{children}</div>
     </section>
   )
 }

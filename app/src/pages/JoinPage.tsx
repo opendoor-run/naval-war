@@ -17,14 +17,12 @@ export default function JoinPage() {
   }, [profile?.display_name])
 
   if (loading) {
-    return (
-      <div className="felt-table flex min-h-screen items-center justify-center text-white">Loading...</div>
-    )
+    return <div className="command-room ptc-mono flex min-h-screen items-center justify-center">Loading...</div>
   }
 
   if (!user) {
     return (
-      <div className="felt-table flex min-h-screen items-center justify-center text-white">
+      <div className="command-room flex min-h-screen items-center justify-center">
         <SignInGate onSignIn={signInWithPassword} title="Sign in to join" />
       </div>
     )
@@ -47,24 +45,24 @@ export default function JoinPage() {
   }
 
   return (
-    <div className="felt-table flex min-h-screen items-center justify-center text-white">
-      <div className="w-full max-w-sm rounded-xl border border-white/15 bg-black/25 p-6">
-        <h1 className="mb-1 text-2xl font-bold">Join Naval War</h1>
-        <p className="mb-4 text-sm text-white/70">Pick a name to join this game.</p>
+    <div className="command-room flex min-h-screen items-center justify-center">
+      <div className="ptc-panel ptc-clipboard ptc-rivets w-full max-w-sm p-6">
+        <h1 className="ptc-display text-xl">Join Naval War</h1>
+        <p className="ptc-mono mb-4 mt-2 text-sm text-[var(--ink-soft)]">Pick a name to join this game.</p>
         <input
-          className="mb-4 w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-white/40 outline-none focus:border-amber-300"
+          className="ptc-input mb-4 w-full"
           value={nameInput}
           onChange={(e) => setNameInput(e.target.value)}
           placeholder="Admiral Nelson"
           onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
         />
-        {error && <p className="mb-3 text-sm text-red-300">{error}</p>}
-        <button
-          onClick={handleJoin}
-          disabled={busy}
-          className="w-full rounded-md bg-amber-400 py-2 font-semibold text-black transition hover:bg-amber-300 disabled:opacity-50"
-        >
-          {busy ? 'Joining...' : 'Join game'}
+        {error && (
+          <p className="ptc-mono mb-3 border-2 border-[var(--red)] bg-[var(--parchment)] px-3 py-2 text-sm" style={{ color: 'var(--red)' }}>
+            {error}
+          </p>
+        )}
+        <button onClick={handleJoin} disabled={busy} className="ptc-btn ptc-btn-primary w-full py-2">
+          {busy ? 'Joining...' : 'Join Game'}
         </button>
       </div>
     </div>

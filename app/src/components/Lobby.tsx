@@ -51,92 +51,87 @@ export function Lobby({
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-12 text-white">
-      <h1 className="mb-1 text-3xl font-bold">Lobby</h1>
-      <p className="mb-6 text-white/70">
-        Target score {game.target_score} · up to {game.max_players} players
-      </p>
-
-      <div className="mb-6 rounded-xl border border-white/15 bg-black/25 p-5">
-        <p className="mb-2 text-sm font-medium text-white/80">Invite link</p>
-        <div className="flex gap-2">
-          <input
-            readOnly
-            value={inviteUrl}
-            className="flex-1 rounded-md border border-white/20 bg-white/10 px-3 py-2 text-sm text-white"
-            onFocus={(e) => e.currentTarget.select()}
-          />
-          <button
-            onClick={copyLink}
-            className="shrink-0 rounded-md bg-white/15 px-3 py-2 text-sm font-medium hover:bg-white/25"
-          >
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
-        </div>
-      </div>
-
-      <div className="mb-6 rounded-xl border border-white/15 bg-black/25 p-5">
-        <p className="mb-3 text-sm font-medium text-white/80">
-          Players ({players.length}/{game.max_players})
+    <div className="command-room min-h-screen">
+      <div className="mx-auto max-w-lg px-4 py-12">
+        <h1 className="ptc-display text-3xl">Lobby</h1>
+        <p className="ptc-mono mb-6 mt-1 text-sm text-[var(--ink-soft)]">
+          Target score {game.target_score} · up to {game.max_players} players
         </p>
-        <ul className="space-y-1">
-          {players.map((p) => (
-            <li key={p.user_id} className="flex items-center gap-2 rounded bg-white/5 px-3 py-1.5">
-              <span className="text-white/50">#{p.seat_index + 1}</span>
-              <span>{p.display_name}</span>
-              {p.user_id === game.host_id && (
-                <span className="ml-auto rounded bg-amber-400/20 px-2 py-0.5 text-xs text-amber-300">Host</span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
 
-      {error && <p className="mb-3 text-sm text-red-300">{error}</p>}
-
-      {isHost ? (
-        <div className="space-y-3">
-          <button
-            onClick={handleStart}
-            disabled={busy || players.length < 3}
-            className="w-full rounded-md bg-amber-400 py-2 font-semibold text-black transition hover:bg-amber-300 disabled:opacity-50"
-          >
-            {players.length < 3 ? 'Need at least 3 players' : busy ? 'Starting...' : 'Start game'}
-          </button>
-
-          {confirmingDelete ? (
-            <div className="rounded-md border border-red-400/40 bg-red-950/30 p-3 text-center">
-              <p className="mb-2 text-sm text-red-200">Delete this game for everyone? This can't be undone.</p>
-              <div className="flex justify-center gap-2">
-                <button
-                  onClick={handleDelete}
-                  disabled={busy}
-                  className="rounded-md bg-red-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-red-400 disabled:opacity-50"
-                >
-                  {busy ? 'Deleting...' : 'Yes, delete it'}
-                </button>
-                <button
-                  onClick={() => setConfirmingDelete(false)}
-                  disabled={busy}
-                  className="rounded-md border border-white/20 px-4 py-1.5 text-sm text-white/80 hover:bg-white/10"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setConfirmingDelete(true)}
-              disabled={busy}
-              className="w-full rounded-md border border-red-400/30 py-2 text-sm text-red-300 hover:bg-red-950/30 disabled:opacity-50"
-            >
-              Delete game
+        <div className="ptc-panel ptc-clipboard ptc-rivets mb-6 p-5">
+          <p className="ptc-headline mb-2 text-sm">Invite Link</p>
+          <div className="flex gap-2">
+            <input
+              readOnly
+              value={inviteUrl}
+              className="ptc-input flex-1 text-sm"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+            <button onClick={copyLink} className="ptc-btn shrink-0 px-3 py-2 text-sm">
+              {copied ? 'Copied!' : 'Copy'}
             </button>
-          )}
+          </div>
         </div>
-      ) : (
-        <p className="text-center text-white/60">Waiting for the host to start the game...</p>
-      )}
+
+        <div className="ptc-panel ptc-clipboard ptc-rivets mb-6 p-5">
+          <p className="ptc-headline mb-3 text-sm">
+            Players ({players.length}/{game.max_players})
+          </p>
+          <ul className="space-y-1">
+            {players.map((p) => (
+              <li
+                key={p.user_id}
+                className="ptc-mono flex items-center gap-2 border-b border-dashed border-[var(--parchment-lo)] px-1 py-1.5 text-sm text-[var(--ink)] last:border-b-0"
+              >
+                <span className="text-[var(--ink-soft)]">#{p.seat_index + 1}</span>
+                <span>{p.display_name}</span>
+                {p.user_id === game.host_id && <span className="ptc-stamp ml-auto px-1.5 py-0.5 text-[10px]">Host</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {error && (
+          <p className="ptc-mono mb-3 border-2 border-[var(--red)] bg-[var(--parchment-hi)] px-3 py-2 text-sm" style={{ color: 'var(--red)' }}>
+            {error}
+          </p>
+        )}
+
+        {isHost ? (
+          <div className="space-y-3">
+            <button onClick={handleStart} disabled={busy || players.length < 3} className="ptc-btn ptc-btn-primary w-full py-2">
+              {players.length < 3 ? 'Need at least 3 players' : busy ? 'Starting...' : 'Start Game'}
+            </button>
+
+            {confirmingDelete ? (
+              <div className="border-2 border-[var(--red)] bg-[var(--parchment-hi)] p-3 text-center">
+                <p className="ptc-mono mb-2 text-sm" style={{ color: 'var(--red)' }}>
+                  Delete this game for everyone? This can't be undone.
+                </p>
+                <div className="flex justify-center gap-2">
+                  <button onClick={handleDelete} disabled={busy} className="ptc-btn ptc-btn-danger px-4 py-1.5 text-sm">
+                    {busy ? 'Deleting...' : 'Yes, Delete It'}
+                  </button>
+                  <button onClick={() => setConfirmingDelete(false)} disabled={busy} className="ptc-btn px-4 py-1.5 text-sm">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                disabled={busy}
+                className="ptc-btn w-full py-2 text-sm"
+                style={{ color: 'var(--red)', borderColor: 'var(--red)' }}
+              >
+                Delete Game
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="ptc-mono text-center text-sm text-[var(--ink-soft)]">Waiting for the host to start the game...</p>
+        )}
+      </div>
     </div>
   )
 }

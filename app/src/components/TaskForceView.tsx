@@ -23,22 +23,19 @@ export function TaskForceView({
 
   return (
     <div
-      className={`rounded-xl border p-3 ${
-        isMine ? 'border-amber-300/40 bg-amber-400/5' : 'border-white/15 bg-black/20'
-      }`}
+      className="ptc-panel ptc-rivets p-3"
+      style={isMine ? { borderLeft: '4px solid var(--amber)' } : undefined}
     >
       <div className="mb-2 flex items-center gap-2">
-        <span className="font-semibold text-white">{ownerName}</span>
-        {isMine && <span className="rounded bg-amber-400/20 px-1.5 py-0.5 text-[10px] text-amber-300">You</span>}
-        {force.smoke_active && (
-          <span className="rounded bg-slate-400/20 px-1.5 py-0.5 text-[10px] text-slate-300">Smoke</span>
-        )}
+        <span className="ptc-headline text-base">{ownerName}</span>
+        {isMine && <span className="ptc-stamp px-1.5 py-0.5 text-[10px]">You</span>}
+        {force.smoke_active && <span className="ptc-stamp px-1.5 py-0.5 text-[10px]">Smoke</span>}
         {force.minefields.length > 0 && (
-          <span className="rounded bg-red-400/20 px-1.5 py-0.5 text-[10px] text-red-300">
+          <span className="ptc-stamp px-1.5 py-0.5 text-[10px]">
             {force.minefields.length} Minefield{force.minefields.length > 1 ? 's' : ''}
           </span>
         )}
-        <span className="ml-auto text-xs text-white/50">Deep Six: {force.deep_six.length}</span>
+        <span className="ptc-mono ml-auto text-xs text-[var(--ink-soft)]">Deep Six: {force.deep_six.length}</span>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -54,7 +51,7 @@ export function TaskForceView({
                 onClick={selectable ? () => onSelectShip?.(s.shipId) : undefined}
               />
               {s.damage > 0 && (
-                <div className="absolute -bottom-1 -right-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow">
+                <div className="ptc-mono absolute -bottom-1 -right-1 border border-[var(--navy-deep)] bg-[var(--amber)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--navy-deep)]">
                   {s.damage}/{card.hitPoints}
                 </div>
               )}
@@ -62,12 +59,16 @@ export function TaskForceView({
           )
         })}
         {sunkShips.map((s) => (
-          <div key={s.shipId} className="relative opacity-30">
+          <div key={s.shipId} className="relative w-24 shrink-0" style={{ aspectRatio: '5 / 3' }}>
             <CardImage cardId={s.shipId} size="sm" dim />
-            <div className="absolute inset-0 flex items-center justify-center text-lg">💀</div>
+            <div
+              className="ptc-stamp pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 py-0.5 text-center text-[10px]"
+            >
+              Sunk
+            </div>
           </div>
         ))}
-        {force.ships.length === 0 && <p className="text-sm text-white/40">No ships</p>}
+        {force.ships.length === 0 && <p className="ptc-mono text-sm text-[var(--ink-soft)]">No ships</p>}
       </div>
     </div>
   )

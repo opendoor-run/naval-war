@@ -74,14 +74,16 @@ export function GameBoard({
   }
 
   return (
-    <div className="felt-table min-h-screen text-white">
+    <div className="command-room min-h-screen">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-6 lg:grid-cols-[1fr_280px]">
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3 text-sm text-white/70">
+          <div className="ptc-mono flex flex-wrap items-center gap-3 text-sm text-[var(--ink-soft)]">
             <span>Draw pile: {game.draw_pile.length}</span>
             <span>Discard: {game.discard_pile.length}</span>
             <span>Harbor: {game.harbor_pile.length}</span>
-            {game.status === 'finished' && <span className="font-bold text-amber-300">Game over!</span>}
+            {game.status === 'finished' && (
+              <span className="ptc-stamp px-2 py-0.5 text-xs">Game Over</span>
+            )}
           </div>
 
           {/* Opponent fleets */}
@@ -96,7 +98,11 @@ export function GameBoard({
           {/* My fleet */}
           <TaskForceView force={myForce} ownerName={myPlayer.display_name} isMine />
 
-          {error && <p className="rounded bg-red-950/60 px-3 py-2 text-sm text-red-300">{error}</p>}
+          {error && (
+            <p className="ptc-mono border-2 border-[var(--red)] bg-[var(--parchment-hi)] px-3 py-2 text-sm" style={{ color: 'var(--red)' }}>
+              {error}
+            </p>
+          )}
 
           {/* Contextual prompts, highest priority first */}
           {mustResolveSquadron && (
@@ -161,28 +167,24 @@ export function GameBoard({
           )}
 
           {/* Hand + turn controls */}
-          <div className="rounded-xl border border-white/15 bg-black/25 p-3">
+          <div className="ptc-panel ptc-clipboard ptc-rivets p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm font-medium text-white/70">
-                {isMySpecialTurn ? 'Your setup turn' : isMyNormalTurn ? 'Your turn' : 'Your hand'}
+              <p className="ptc-headline text-sm">
+                {isMySpecialTurn ? 'Your Setup Turn' : isMyNormalTurn ? 'Your Turn' : 'Your Hand'}
               </p>
               {isMySpecialTurn && (
                 <button
                   disabled={busy}
                   onClick={() => run(() => dispatch({ gameId: game.id, type: 'pass_special' }))}
-                  className="rounded-md bg-amber-400 px-3 py-1 text-xs font-semibold text-black hover:bg-amber-300 disabled:opacity-40"
+                  className="ptc-btn ptc-btn-primary px-3 py-1 text-xs"
                 >
-                  Done with setup
+                  Done with Setup
                 </button>
               )}
               {isMyNormalTurn && !hasPendingDrawn && !mustResolveSquadron && (
                 <div className="flex gap-2">
                   {myForce?.ships.some((s) => !s.sunk && getShip(s.shipId).isCarrier) && (
-                    <button
-                      disabled={busy}
-                      onClick={() => setMode('airstrike')}
-                      className="rounded-md border border-white/20 px-3 py-1 text-xs text-white/80 hover:bg-white/10"
-                    >
+                    <button disabled={busy} onClick={() => setMode('airstrike')} className="ptc-btn px-3 py-1 text-xs">
                       Airstrike
                     </button>
                   )}
@@ -190,15 +192,15 @@ export function GameBoard({
                     <button
                       disabled={busy}
                       onClick={() => run(() => dispatch({ gameId: game.id, type: 'discard', cardId: selectedCardId }))}
-                      className="rounded-md border border-white/20 px-3 py-1 text-xs text-white/80 hover:bg-white/10"
+                      className="ptc-btn px-3 py-1 text-xs"
                     >
-                      Discard selected
+                      Discard Selected
                     </button>
                   )}
                   <button
                     disabled={busy}
                     onClick={() => run(() => dispatch({ gameId: game.id, type: 'draw' }))}
-                    className="rounded-md bg-amber-400 px-3 py-1 text-xs font-semibold text-black hover:bg-amber-300 disabled:opacity-40"
+                    className="ptc-btn ptc-btn-primary px-3 py-1 text-xs"
                   >
                     Draw
                   </button>
@@ -217,10 +219,10 @@ export function GameBoard({
         <div className="space-y-4">
           <ScorePanel game={game} players={players} myUserId={myUserId} />
           {destroyerSquadrons.length > 0 && (
-            <div className="rounded-xl border border-white/15 bg-black/25 p-3 text-sm">
-              <p className="mb-1 font-medium text-white/70">Destroyer Squadrons</p>
+            <div className="ptc-panel ptc-clipboard ptc-rivets p-3 text-sm">
+              <p className="ptc-headline mb-1 text-sm">Destroyer Squadrons</p>
               {destroyerSquadrons.map((s) => (
-                <p key={s.id} className="text-white/70">
+                <p key={s.id} className="ptc-mono text-[var(--ink-soft)]">
                   {players.find((p) => p.user_id === s.owner_id)?.display_name}: {s.hits_taken}/4 hits
                 </p>
               ))}

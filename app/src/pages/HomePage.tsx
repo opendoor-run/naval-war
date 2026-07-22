@@ -79,27 +79,29 @@ export default function HomePage() {
   }
 
   return (
-    <div className="felt-table min-h-screen text-white">
+    <div className="command-room min-h-screen">
       <div className="mx-auto max-w-lg px-4 py-12">
-        <h1 className="mb-1 text-center text-4xl font-bold tracking-tight">Naval War</h1>
-        <p className="mb-2 text-center text-white/70">Sink fleets. Score points. First to the target wins.</p>
-        <p className="mb-8 text-center text-xs text-white/40">
-          Signed in as {user.email} · <button onClick={() => void signOut()} className="underline hover:text-white/70">Sign out</button>
+        <h1 className="ptc-display text-center text-4xl">Naval War</h1>
+        <p className="ptc-mono mb-2 mt-2 text-center text-sm text-[var(--ink-soft)]">
+          Sink fleets. Score points. First to the target wins.
+        </p>
+        <p className="ptc-mono mb-8 text-center text-xs text-[var(--ink-soft)]">
+          Signed in as {user.email} ·{' '}
+          <button onClick={() => void signOut()} className="underline hover:opacity-70">
+            Sign out
+          </button>
         </p>
 
-        <div className="mb-6 rounded-xl border border-white/15 bg-black/25 p-5">
+        <div className="ptc-panel ptc-clipboard ptc-rivets mb-6 p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-white/80">Create a game</h2>
-            <button
-              onClick={() => setShowInstructions(true)}
-              className="rounded-md border border-white/20 px-3 py-1 text-xs text-white/80 hover:bg-white/10"
-            >
+            <h2 className="ptc-headline text-sm">Create a Game</h2>
+            <button onClick={() => setShowInstructions(true)} className="ptc-btn px-3 py-1 text-xs">
               Instructions
             </button>
           </div>
-          <label className="mb-1 block text-sm font-medium text-white/80">Your display name</label>
+          <label className="ptc-mono mb-1 block text-xs text-[var(--ink-soft)]">Your display name</label>
           <input
-            className="mb-4 w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-white/40 outline-none focus:border-amber-300"
+            className="ptc-input mb-4 w-full"
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
             placeholder="Admiral Nelson"
@@ -107,50 +109,47 @@ export default function HomePage() {
 
           <div className="mb-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-white/80">Target score</label>
+              <label className="ptc-mono mb-1 block text-xs text-[var(--ink-soft)]">Target score</label>
               <input
                 type="number"
                 min={10}
-                className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white outline-none focus:border-amber-300"
+                className="ptc-input w-full"
                 value={targetScore}
                 onChange={(e) => setTargetScore(Number(e.target.value))}
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-white/80">Max players (3-9)</label>
+              <label className="ptc-mono mb-1 block text-xs text-[var(--ink-soft)]">Max players (3-9)</label>
               <input
                 type="number"
                 min={3}
                 max={9}
-                className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white outline-none focus:border-amber-300"
+                className="ptc-input w-full"
                 value={maxPlayers}
                 onChange={(e) => setMaxPlayers(Number(e.target.value))}
               />
             </div>
           </div>
 
-          {error && <p className="mb-3 text-sm text-red-300">{error}</p>}
+          {error && (
+            <p className="ptc-mono mb-3 border-2 border-[var(--red)] bg-[var(--parchment)] px-3 py-2 text-sm" style={{ color: 'var(--red)' }}>
+              {error}
+            </p>
+          )}
 
-          <button
-            onClick={handleCreate}
-            disabled={busy}
-            className="w-full rounded-md bg-amber-400 py-2 font-semibold text-black transition hover:bg-amber-300 disabled:opacity-50"
-          >
-            {busy ? 'Creating...' : 'Create a game'}
+          <button onClick={handleCreate} disabled={busy} className="ptc-btn ptc-btn-primary w-full py-2">
+            {busy ? 'Creating...' : 'Create a Game'}
           </button>
         </div>
 
         {myGames.length > 0 && (
-          <div className="rounded-xl border border-white/15 bg-black/25 p-5">
-            <h2 className="mb-3 text-lg font-semibold">Your games</h2>
+          <div className="ptc-panel ptc-clipboard ptc-rivets p-5">
+            <h2 className="ptc-headline mb-3 text-sm">Your Games</h2>
             <ul className="space-y-2">
               {myGames.map((g) => (
                 <li key={g.game_id}>
-                  <button
-                    className="w-full rounded-md border border-white/15 bg-white/5 px-3 py-2 text-left hover:bg-white/10"
-                    onClick={() => navigate(`/game/${g.game_id}`)}
-                  >
-                    Game {g.game_id.slice(0, 8)} - <span className="text-white/60">{g.status}</span>
+                  <button onClick={() => navigate(`/game/${g.game_id}`)} className="ptc-chip w-full px-3 py-2 text-left text-sm">
+                    Game {g.game_id.slice(0, 8)} - <span className="text-[var(--ink-soft)]">{g.status}</span>
                   </button>
                 </li>
               ))}
@@ -164,5 +163,5 @@ export default function HomePage() {
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
-  return <div className="felt-table flex min-h-screen items-center justify-center text-white">{children}</div>
+  return <div className="command-room flex min-h-screen items-center justify-center">{children}</div>
 }

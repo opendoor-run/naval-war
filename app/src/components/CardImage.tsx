@@ -49,9 +49,10 @@ export function CardImage({
     <button
       type="button"
       onClick={onClick}
-      className={`relative ${dims} shrink-0 overflow-hidden rounded-lg border-2 bg-[#f3ecd8] text-left shadow-md transition-transform
-        ${selected ? 'border-amber-400 -translate-y-2 ring-2 ring-amber-300' : 'border-[#c9bd9a]'}
-        ${dim ? 'opacity-40 grayscale' : 'hover:-translate-y-1'}
+      className={`relative ${dims} shrink-0 overflow-hidden border text-left transition-transform
+        border-[var(--navy-deep)] bg-[var(--parchment)]
+        ${selected ? '-translate-y-2 shadow-[3px_3px_0_var(--amber)]' : 'shadow-[1px_1px_0_rgba(21,39,56,0.2)]'}
+        ${dim ? 'opacity-40' : 'hover:-translate-y-1'}
         ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
       style={{ aspectRatio: '5 / 3' }}
     >
@@ -60,16 +61,24 @@ export function CardImage({
           src={cardImageUrl(cardId)}
           alt={titleText(cardId)}
           className="h-[125%] w-full object-cover object-center"
-          style={{ transform: 'translateY(-8%)' }}
+          style={{ transform: 'translateY(-8%)', filter: 'grayscale(1) contrast(1.15) sepia(0.15)' }}
           draggable={false}
         />
       </div>
-      <div className="absolute left-1 top-1 rounded bg-black/75 px-1.5 py-0.5 text-xs font-bold text-white">
-        {statText(cardId)}
-      </div>
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-1.5 pb-1 pt-3">
-        <div className="truncate text-[11px] font-semibold leading-tight text-white">{titleText(cardId)}</div>
-        {subText(cardId) && <div className="truncate text-[9px] leading-tight text-white/80">{subText(cardId)}</div>}
+      {statText(cardId) && (
+        <div className="ptc-mono absolute left-1 top-1 border border-[var(--navy-deep)] bg-[var(--amber)] px-1.5 py-0.5 text-[11px] font-bold text-[var(--navy-deep)]">
+          {statText(cardId)}
+        </div>
+      )}
+      <div className="absolute inset-x-0 bottom-0 bg-[var(--navy-deep)] px-1.5 pb-1 pt-1">
+        <div className="ptc-mono truncate text-[10px] uppercase leading-tight text-[var(--parchment-hi)]">
+          {titleText(cardId)}
+        </div>
+        {subText(cardId) && (
+          <div className="truncate text-[9px] leading-tight text-[var(--parchment-hi)] opacity-70">
+            {subText(cardId)}
+          </div>
+        )}
       </div>
     </button>
   )

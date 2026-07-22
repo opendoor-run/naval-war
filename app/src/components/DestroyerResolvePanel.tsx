@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { getShip } from '../lib/cards'
 import type { GamePlayerRow, TaskForceRow } from '../types/game'
 
+function chip(active: boolean): string {
+  return `ptc-chip px-2 py-1 text-xs ${active ? 'ptc-chip-active' : ''}`
+}
+
 export function DestroyerResolvePanel({
   myUserId,
   players,
@@ -26,9 +30,11 @@ export function DestroyerResolvePanel({
   }
 
   return (
-    <div className="rounded-xl border border-red-400/40 bg-black/40 p-4">
-      <p className="mb-1 font-semibold text-white">Your Destroyer Squadron attacks!</p>
-      <p className="mb-3 text-xs text-white/60">
+    <div className="ptc-panel ptc-rivets p-4" style={{ borderColor: 'var(--red)', borderWidth: 1.5 }}>
+      <p className="ptc-headline text-sm" style={{ color: 'var(--red)' }}>
+        Your Destroyer Squadron Attacks!
+      </p>
+      <p className="ptc-mono mb-3 text-xs text-[var(--ink-soft)]">
         Choose the target fleet, then click ships in the order you'd want them sunk if the roll allows it.
       </p>
       <div className="mb-3 flex flex-wrap gap-2">
@@ -39,9 +45,7 @@ export function DestroyerResolvePanel({
               setTargetOwnerId(p.user_id)
               setPriority([])
             }}
-            className={`rounded border px-2 py-1 text-xs ${
-              targetOwnerId === p.user_id ? 'border-amber-300 bg-amber-400/20' : 'border-white/20 bg-white/5'
-            }`}
+            className={chip(targetOwnerId === p.user_id)}
           >
             {p.display_name}
           </button>
@@ -55,13 +59,7 @@ export function DestroyerResolvePanel({
             .map((s) => {
               const order = priority.indexOf(s.shipId)
               return (
-                <button
-                  key={s.shipId}
-                  onClick={() => toggleShip(s.shipId)}
-                  className={`relative rounded border px-2 py-1 text-xs ${
-                    order >= 0 ? 'border-amber-300 bg-amber-400/20' : 'border-white/20 bg-white/5'
-                  }`}
-                >
+                <button key={s.shipId} onClick={() => toggleShip(s.shipId)} className={chip(order >= 0)}>
                   {order >= 0 && <span className="mr-1 font-bold">{order + 1}.</span>}
                   {getShip(s.shipId).name}
                 </button>
@@ -73,9 +71,9 @@ export function DestroyerResolvePanel({
       <button
         onClick={() => targetOwnerId && onConfirm(targetOwnerId, priority)}
         disabled={!targetOwnerId || priority.length === 0 || busy}
-        className="rounded-md bg-red-400 px-4 py-1.5 text-sm font-semibold text-black hover:bg-red-300 disabled:opacity-40"
+        className="ptc-btn ptc-btn-danger px-4 py-1.5 text-sm"
       >
-        {busy ? 'Rolling...' : 'Roll and attack'}
+        {busy ? 'Rolling...' : 'Roll and Attack'}
       </button>
     </div>
   )
