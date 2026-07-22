@@ -19,20 +19,19 @@ export function Modal({
   }, [onClose])
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--navy-deep)]/80 p-4" onClick={onClose}>
       <div
-        className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-white/15 bg-[#0e2c1f] text-white shadow-2xl"
+        className="ptc-panel flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
-          <h2 className="text-lg font-bold">{title}</h2>
+        <div className="flex items-center justify-between border-b border-[var(--navy-deep)] bg-[var(--navy-deep)] px-5 py-3">
+          <h2 className="ptc-display text-lg" style={{ color: 'var(--parchment-hi)', textShadow: 'none' }}>
+            {title}
+          </h2>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md px-2 py-1 text-white/60 hover:bg-white/10 hover:text-white"
+            className="ptc-mono px-2 py-1 text-[var(--parchment-hi)] hover:opacity-70"
           >
             ✕
           </button>

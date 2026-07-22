@@ -3,6 +3,10 @@ import { getPlayCard, getShip, CARD_TYPE_LABELS } from '../lib/cards'
 import { CardImage } from './CardImage'
 import type { ActionTarget, DestroyerSquadronRow, GamePlayerRow, TaskForceRow } from '../types/game'
 
+function chip(active: boolean): string {
+  return `ptc-chip px-2 py-1 text-xs ${active ? 'ptc-chip-active' : ''}`
+}
+
 export function ActionPanel({
   cardId,
   title,
@@ -70,18 +74,18 @@ export function ActionPanel({
   const targetForce = targetOwnerId ? taskForces[targetOwnerId] : undefined
 
   return (
-    <div className="rounded-xl border border-amber-300/40 bg-black/40 p-4">
+    <div className="ptc-panel ptc-rivets p-4">
       <div className="mb-3 flex items-center gap-3">
         <CardImage cardId={cardId} size="sm" />
         <div>
-          <p className="font-semibold text-white">{title}</p>
-          <p className="text-xs text-white/60">{CARD_TYPE_LABELS[card.type]}</p>
+          <p className="ptc-headline text-sm">{title}</p>
+          <p className="ptc-mono text-xs text-[var(--ink-soft)]">{CARD_TYPE_LABELS[card.type]}</p>
         </div>
       </div>
 
       {card.type === 'salvo' && destroyerSquadrons.filter((s) => s.owner_id !== myUserId).length > 0 && (
         <div className="mb-3">
-          <p className="mb-1 text-xs text-white/60">Fire at a Destroyer Squadron instead?</p>
+          <p className="ptc-mono mb-1 text-xs text-[var(--ink-soft)]">Fire at a Destroyer Squadron instead?</p>
           <div className="flex flex-wrap gap-2">
             {destroyerSquadrons
               .filter((s) => s.owner_id !== myUserId)
@@ -93,9 +97,7 @@ export function ActionPanel({
                     setTargetOwnerId(null)
                     setTargetShipId(null)
                   }}
-                  className={`rounded-md border px-2 py-1 text-xs ${
-                    targetSquadronId === s.id ? 'border-amber-300 bg-amber-400/20' : 'border-white/20 bg-white/5'
-                  }`}
+                  className={chip(targetSquadronId === s.id)}
                 >
                   {players.find((p) => p.user_id === s.owner_id)?.display_name}'s Squadron ({s.hits_taken}/4)
                 </button>
@@ -106,7 +108,7 @@ export function ActionPanel({
 
       {!isOwnShipCard && !noTargetNeeded && !targetSquadronId && (
         <div className="mb-3">
-          <p className="mb-1 text-xs text-white/60">Target player</p>
+          <p className="ptc-mono mb-1 text-xs text-[var(--ink-soft)]">Target player</p>
           <div className="flex flex-wrap gap-2">
             {opponents.map((p) => (
               <button
@@ -116,9 +118,7 @@ export function ActionPanel({
                   setTargetShipId(null)
                   setTargetSalvoId(null)
                 }}
-                className={`rounded-md border px-2 py-1 text-xs ${
-                  targetOwnerId === p.user_id ? 'border-amber-300 bg-amber-400/20' : 'border-white/20 bg-white/5'
-                }`}
+                className={chip(targetOwnerId === p.user_id)}
               >
                 {p.display_name}
               </button>
@@ -129,7 +129,7 @@ export function ActionPanel({
 
       {!isOwnShipCard && card.type !== 'minefield' && targetForce && !targetSquadronId && (
         <div className="mb-3">
-          <p className="mb-1 text-xs text-white/60">Target ship</p>
+          <p className="ptc-mono mb-1 text-xs text-[var(--ink-soft)]">Target ship</p>
           <div className="flex flex-wrap gap-2">
             {targetForce.ships
               .filter((s) => !s.sunk)
@@ -140,9 +140,7 @@ export function ActionPanel({
                     setTargetShipId(s.shipId)
                     setTargetSalvoId(null)
                   }}
-                  className={`rounded border px-2 py-1 text-xs ${
-                    targetShipId === s.shipId ? 'border-amber-300 bg-amber-400/20' : 'border-white/20 bg-white/5'
-                  }`}
+                  className={chip(targetShipId === s.shipId)}
                 >
                   {getShip(s.shipId).name}
                 </button>
@@ -153,18 +151,12 @@ export function ActionPanel({
 
       {card.type === 'additional_damage' && targetShipId && targetForce && (
         <div className="mb-3">
-          <p className="mb-1 text-xs text-white/60">Salvo stack to boost</p>
+          <p className="ptc-mono mb-1 text-xs text-[var(--ink-soft)]">Salvo stack to boost</p>
           <div className="flex flex-wrap gap-2">
             {targetForce.ships
               .find((s) => s.shipId === targetShipId)
               ?.salvos.map((salvo) => (
-                <button
-                  key={salvo.id}
-                  onClick={() => setTargetSalvoId(salvo.id)}
-                  className={`rounded border px-2 py-1 text-xs ${
-                    targetSalvoId === salvo.id ? 'border-amber-300 bg-amber-400/20' : 'border-white/20 bg-white/5'
-                  }`}
-                >
+                <button key={salvo.id} onClick={() => setTargetSalvoId(salvo.id)} className={chip(targetSalvoId === salvo.id)}>
                   {salvo.gunSize}"-{salvo.damage}
                 </button>
               ))}
@@ -174,7 +166,7 @@ export function ActionPanel({
 
       {isOwnShipCard && ownForce && (
         <div className="mb-3">
-          <p className="mb-1 text-xs text-white/60">Your ship to repair</p>
+          <p className="ptc-mono mb-1 text-xs text-[var(--ink-soft)]">Your ship to repair</p>
           <div className="flex flex-wrap gap-2">
             {ownForce.ships
               .filter((s) => !s.sunk && s.salvos.length > 0)
@@ -185,9 +177,7 @@ export function ActionPanel({
                     setTargetShipId(s.shipId)
                     setTargetSalvoId(null)
                   }}
-                  className={`rounded border px-2 py-1 text-xs ${
-                    targetShipId === s.shipId ? 'border-amber-300 bg-amber-400/20' : 'border-white/20 bg-white/5'
-                  }`}
+                  className={chip(targetShipId === s.shipId)}
                 >
                   {getShip(s.shipId).name}
                 </button>
@@ -198,18 +188,12 @@ export function ActionPanel({
 
       {isOwnShipCard && targetShipId && ownForce && (
         <div className="mb-3">
-          <p className="mb-1 text-xs text-white/60">Salvo stack to remove</p>
+          <p className="ptc-mono mb-1 text-xs text-[var(--ink-soft)]">Salvo stack to remove</p>
           <div className="flex flex-wrap gap-2">
             {ownForce.ships
               .find((s) => s.shipId === targetShipId)
               ?.salvos.map((salvo) => (
-                <button
-                  key={salvo.id}
-                  onClick={() => setTargetSalvoId(salvo.id)}
-                  className={`rounded border px-2 py-1 text-xs ${
-                    targetSalvoId === salvo.id ? 'border-amber-300 bg-amber-400/20' : 'border-white/20 bg-white/5'
-                  }`}
-                >
+                <button key={salvo.id} onClick={() => setTargetSalvoId(salvo.id)} className={chip(targetSalvoId === salvo.id)}>
                   {salvo.gunSize}"-{salvo.damage}
                   {salvo.additionalDamage.length > 0 ? ` (+${salvo.additionalDamage.length})` : ''}
                 </button>
@@ -219,19 +203,11 @@ export function ActionPanel({
       )}
 
       <div className="flex gap-2">
-        <button
-          onClick={confirm}
-          disabled={!canConfirm || busy}
-          className="rounded-md bg-amber-400 px-4 py-1.5 text-sm font-semibold text-black hover:bg-amber-300 disabled:opacity-40"
-        >
+        <button onClick={confirm} disabled={!canConfirm || busy} className="ptc-btn ptc-btn-primary px-4 py-1.5 text-sm">
           {busy ? 'Working...' : 'Confirm'}
         </button>
         {allowCancel && (
-          <button
-            onClick={onCancel}
-            disabled={busy}
-            className="rounded-md border border-white/20 px-4 py-1.5 text-sm text-white/80 hover:bg-white/10"
-          >
+          <button onClick={onCancel} disabled={busy} className="ptc-btn px-4 py-1.5 text-sm">
             Cancel
           </button>
         )}

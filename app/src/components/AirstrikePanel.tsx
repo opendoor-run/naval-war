@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { getShip } from '../lib/cards'
 import type { AirstrikeDeclaration, GamePlayerRow, TaskForceRow } from '../types/game'
 
+function chip(active: boolean): string {
+  return `ptc-chip px-2 py-0.5 text-xs ${active ? 'ptc-chip-active' : ''}`
+}
+
 export function AirstrikePanel({
   myUserId,
   myForce,
@@ -35,24 +39,18 @@ export function AirstrikePanel({
     .map(([carrierShipId, v]) => ({ carrierShipId, targetOwnerId: v.ownerId, targetShipId: v.shipId }))
 
   return (
-    <div className="rounded-xl border border-amber-300/40 bg-black/40 p-4">
-      <p className="mb-3 font-semibold text-white">Declare airstrikes</p>
+    <div className="ptc-panel ptc-rivets p-4">
+      <p className="ptc-headline mb-3 text-sm">Declare Airstrikes</p>
       <div className="space-y-3">
         {carriers.map((c) => {
           const assignment = assignments[c.shipId]
           const targetForce = assignment?.ownerId ? taskForces[assignment.ownerId] : undefined
           return (
-            <div key={c.shipId} className="rounded-lg border border-white/10 bg-white/5 p-2">
-              <p className="mb-1 text-sm text-white/80">{getShip(c.shipId).name}</p>
+            <div key={c.shipId} className="border border-[var(--navy-deep)] bg-[var(--parchment)] p-2">
+              <p className="ptc-mono mb-1 text-sm text-[var(--ink)]">{getShip(c.shipId).name}</p>
               <div className="mb-2 flex flex-wrap gap-1">
                 {opponents.map((p) => (
-                  <button
-                    key={p.user_id}
-                    onClick={() => setOwner(c.shipId, p.user_id)}
-                    className={`rounded border px-2 py-0.5 text-xs ${
-                      assignment?.ownerId === p.user_id ? 'border-amber-300 bg-amber-400/20' : 'border-white/20'
-                    }`}
-                  >
+                  <button key={p.user_id} onClick={() => setOwner(c.shipId, p.user_id)} className={chip(assignment?.ownerId === p.user_id)}>
                     {p.display_name}
                   </button>
                 ))}
@@ -62,13 +60,7 @@ export function AirstrikePanel({
                   {targetForce.ships
                     .filter((s) => !s.sunk)
                     .map((s) => (
-                      <button
-                        key={s.shipId}
-                        onClick={() => setShip(c.shipId, s.shipId)}
-                        className={`rounded border px-2 py-0.5 text-xs ${
-                          assignment?.shipId === s.shipId ? 'border-amber-300 bg-amber-400/20' : 'border-white/20'
-                        }`}
-                      >
+                      <button key={s.shipId} onClick={() => setShip(c.shipId, s.shipId)} className={chip(assignment?.shipId === s.shipId)}>
                         {getShip(s.shipId).name}
                       </button>
                     ))}
@@ -80,18 +72,10 @@ export function AirstrikePanel({
       </div>
 
       <div className="mt-3 flex gap-2">
-        <button
-          onClick={() => onConfirm(strikes)}
-          disabled={strikes.length === 0 || busy}
-          className="rounded-md bg-amber-400 px-4 py-1.5 text-sm font-semibold text-black hover:bg-amber-300 disabled:opacity-40"
-        >
-          {busy ? 'Working...' : `Launch ${strikes.length || ''} strike${strikes.length === 1 ? '' : 's'}`}
+        <button onClick={() => onConfirm(strikes)} disabled={strikes.length === 0 || busy} className="ptc-btn ptc-btn-primary px-4 py-1.5 text-sm">
+          {busy ? 'Working...' : `Launch ${strikes.length || ''} Strike${strikes.length === 1 ? '' : 's'}`}
         </button>
-        <button
-          onClick={onCancel}
-          disabled={busy}
-          className="rounded-md border border-white/20 px-4 py-1.5 text-sm text-white/80 hover:bg-white/10"
-        >
+        <button onClick={onCancel} disabled={busy} className="ptc-btn px-4 py-1.5 text-sm">
           Cancel
         </button>
       </div>

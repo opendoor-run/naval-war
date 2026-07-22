@@ -14,12 +14,12 @@ export default function GamePage() {
   const { messages, sendMessage, sending } = useChatMessages(gameId, user?.id)
 
   if (authLoading || loading || !game) {
-    return <div className="felt-table flex min-h-screen items-center justify-center text-white">Loading...</div>
+    return <div className="command-room ptc-mono flex min-h-screen items-center justify-center">Loading...</div>
   }
   const myPlayer = players.find((p) => p.user_id === user?.id)
   if (!myPlayer || !user) {
     return (
-      <div className="felt-table flex min-h-screen items-center justify-center text-white">
+      <div className="command-room ptc-mono flex min-h-screen items-center justify-center">
         You're not seated in this game.
       </div>
     )

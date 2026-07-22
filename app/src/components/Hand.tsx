@@ -26,7 +26,7 @@ export function Hand({
           />
         )
       })}
-      {cards.length === 0 && <p className="text-sm text-white/40">Your hand is empty.</p>}
+      {cards.length === 0 && <p className="ptc-mono text-sm text-[var(--ink-soft)]">Your hand is empty.</p>}
     </div>
   )
 }
