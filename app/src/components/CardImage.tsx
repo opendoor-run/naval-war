@@ -61,7 +61,7 @@ export function CardImage({
           src={cardImageUrl(cardId)}
           alt={titleText(cardId)}
           className="h-[125%] w-full object-cover object-center"
-          style={{ transform: 'translateY(-8%)', filter: 'grayscale(1) contrast(1.15) sepia(0.15)' }}
+          style={{ transform: 'translateY(-8%)' }}
           draggable={false}
         />
       </div>
