@@ -9,11 +9,13 @@ deployed to Vercel. You don't need any prior experience with either.
 ## 1. Supabase: database + policies
 
 1. Open your Supabase project's dashboard → **SQL Editor** → **New query**.
-2. Open [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) in this repo, copy the whole
-   file, paste it into the SQL editor, and click **Run**. This creates all the
-   tables, security policies, and turns on Realtime for them. It's safe to
-   re-run if something fails partway - every statement uses `if not exists`
-   or `create or replace` where it matters.
+2. Run every file in [`supabase/migrations/`](supabase/migrations/) in order, oldest first:
+   copy each whole file, paste it into the SQL editor, click **Run**, then move to the
+   next one. As of this writing that's `0001_init.sql` (all the core tables, security
+   policies, and Realtime) then `0002_chat.sql` (the in-game chat table). It's safe to
+   re-run any of them if something fails partway - every statement uses `if not exists`
+   or `create or replace` where it matters. Any future `NNNN_*.sql` file added to that
+   folder gets the same treatment.
 3. Go to **Authentication → Sign In / Providers** and make sure **Anonymous
    Sign-ins** is turned **off** (it's off by default). Under the **Email**
    provider, turn **Allow new users to sign up** **off** too. Together these
@@ -125,13 +127,25 @@ touch this, but if you ever replace a scan, re-run it from `app/`:
 node scripts/crop-cards.mjs
 ```
 
+## Visual design
+
+The UI's look ("Pacific Theater Command" - a 1940s naval HQ plotting-table
+aesthetic) is specified in [`DESIGN.md`](DESIGN.md) and implemented as CSS
+custom properties and `.ptc-*` utility classes in `app/src/index.css`. The
+fonts it uses (Bebas Neue, Courier Prime, JetBrains Mono) are real font files
+in `app/public/fonts/`, not system-font substitutes. It's deliberately
+single-theme (no dark mode) and never applies filters to the scanned card
+art - both are intentional calls explained in DESIGN.md's implementation
+notes, not oversights to "fix" later.
+
 ## Project layout
 
 - `cards/` - original scanned card sheets (source material, not served to players).
 - `app/` - the Vite/React frontend. `app/src/data/cards.json` is the single
   source of truth for every card's stats; `app/public/cards/` holds the cropped
-  art.
-- `supabase/migrations/0001_init.sql` - database schema and RLS policies.
+  art; `app/public/fonts/` holds the three embedded typefaces.
+- `supabase/migrations/` - database schema, RLS policies, and incremental
+  changes, applied in order (see step 2 above).
 - `supabase/functions/` - the Edge Functions that referee the game. Game
   logic lives in `supabase/functions/_shared/engine.ts` (pure rules) and
   `supabase/functions/_shared/actions.ts` (turn handling, wired up to the DB).
