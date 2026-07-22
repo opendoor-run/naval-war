@@ -4,3 +4,5 @@ dist/
 .env.local
 *.log
 **/supabase/.temp/
+/Naval War Rules.pdf
+/boxart.webp
