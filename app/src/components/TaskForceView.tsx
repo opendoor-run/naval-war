@@ -1,11 +1,13 @@
 import { getShip } from '../lib/cards'
 import { CardImage } from './CardImage'
-import type { TaskForceRow } from '../types/game'
+import { ShipTooltip } from './ShipTooltip'
+import type { GamePlayerRow, TaskForceRow } from '../types/game'
 
 export function TaskForceView({
   force,
   ownerName,
   isMine,
+  players,
   selectable,
   selectedShipId,
   onSelectShip,
@@ -13,6 +15,7 @@ export function TaskForceView({
   force: TaskForceRow | undefined
   ownerName: string
   isMine: boolean
+  players: GamePlayerRow[]
   selectable?: boolean
   selectedShipId?: string | null
   onSelectShip?: (shipId: string) => void
@@ -43,7 +46,7 @@ export function TaskForceView({
           const card = getShip(s.shipId)
           const isSelected = selectedShipId === s.shipId
           return (
-            <div key={s.shipId} className="relative">
+            <div key={s.shipId} className="group relative">
               <CardImage
                 cardId={s.shipId}
                 size="sm"
@@ -55,17 +58,19 @@ export function TaskForceView({
                   {s.damage}/{card.hitPoints}
                 </div>
               )}
+              <ShipTooltip ship={s} players={players} />
             </div>
           )
         })}
         {sunkShips.map((s) => (
-          <div key={s.shipId} className="relative w-24 shrink-0" style={{ aspectRatio: '5 / 3' }}>
+          <div key={s.shipId} className="group relative w-24 shrink-0" style={{ aspectRatio: '5 / 3' }}>
             <CardImage cardId={s.shipId} size="sm" dim />
             <div
               className="ptc-stamp pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 py-0.5 text-center text-[10px]"
             >
               Sunk
             </div>
+            <ShipTooltip ship={s} players={players} />
           </div>
         ))}
         {force.ships.length === 0 && <p className="ptc-mono text-sm text-[var(--ink-soft)]">No ships</p>}

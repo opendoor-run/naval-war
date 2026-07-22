@@ -91,12 +91,12 @@ export function GameBoard({
             {players
               .filter((p) => p.user_id !== myUserId)
               .map((p) => (
-                <TaskForceView key={p.user_id} force={taskForces[p.user_id]} ownerName={p.display_name} isMine={false} />
+                <TaskForceView key={p.user_id} force={taskForces[p.user_id]} ownerName={p.display_name} isMine={false} players={players} />
               ))}
           </div>
 
           {/* My fleet */}
-          <TaskForceView force={myForce} ownerName={myPlayer.display_name} isMine />
+          <TaskForceView force={myForce} ownerName={myPlayer.display_name} isMine players={players} />
 
           {error && (
             <p className="ptc-mono border-2 border-[var(--red)] bg-[var(--parchment-hi)] px-3 py-2 text-sm" style={{ color: 'var(--red)' }}>
