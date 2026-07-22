@@ -6,23 +6,25 @@ export function Hand({
   selectedCardId,
   onSelect,
   specialPhaseMode,
+  interactive,
 }: {
   cards: string[]
   selectedCardId: string | null
   onSelect: (cardId: string | null) => void
   specialPhaseMode: boolean
+  interactive: boolean
 }) {
   return (
     <div className="flex flex-wrap items-end gap-2">
       {cards.map((cardId) => {
-        const playable = !specialPhaseMode || SPECIAL_PHASE_TYPES.has(getPlayCard(cardId).type)
+        const playable = interactive && (!specialPhaseMode || SPECIAL_PHASE_TYPES.has(getPlayCard(cardId).type))
         return (
           <CardImage
             key={cardId}
             cardId={cardId}
             selected={selectedCardId === cardId}
             dim={!playable}
-            onClick={() => onSelect(selectedCardId === cardId ? null : cardId)}
+            onClick={playable ? () => onSelect(selectedCardId === cardId ? null : cardId) : undefined}
           />
         )
       })}

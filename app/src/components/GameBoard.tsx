@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getShip } from '../lib/cards'
 import { Hand } from './Hand'
 import { TaskForceView } from './TaskForceView'
+import { TurnTracker } from './TurnTracker'
 import { ScorePanel } from './ScorePanel'
 import { GameLog } from './GameLog'
 import { ActionPanel } from './ActionPanel'
@@ -48,10 +49,18 @@ export function GameBoard({
   const mySquadron = destroyerSquadrons.find((s) => s.owner_id === myUserId)
   const myForce = taskForces[myUserId]
 
+  const isMyNormalTurn = game.status === 'in_progress' && game.turn_seat === myPlayer?.seat_index
+  const isMySpecialTurn = game.status === 'special_phase' && game.special_phase_seat === myPlayer?.seat_index
+
+  useEffect(() => {
+    if (!isMyNormalTurn && !isMySpecialTurn) {
+      setSelectedCardId(null)
+      setMode('idle')
+    }
+  }, [isMyNormalTurn, isMySpecialTurn])
+
   if (!myPlayer) return null
 
-  const isMyNormalTurn = game.status === 'in_progress' && game.turn_seat === myPlayer.seat_index
-  const isMySpecialTurn = game.status === 'special_phase' && game.special_phase_seat === myPlayer.seat_index
   const mustResolveSquadron = isMyNormalTurn && !!mySquadron
   const hasPendingDrawn = isMyNormalTurn && !!game.pending_drawn_card
 
@@ -75,7 +84,10 @@ export function GameBoard({
 
   return (
     <div className="command-room min-h-screen">
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 py-6 lg:grid-cols-[1fr_280px]">
+      <div className="mx-auto max-w-6xl px-4 pt-6">
+        <TurnTracker game={game} players={players} destroyerSquadrons={destroyerSquadrons} myUserId={myUserId} />
+      </div>
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 pb-6 pt-4 lg:grid-cols-[1fr_280px]">
         <div className="space-y-4">
           <div className="ptc-mono flex flex-wrap items-center gap-3 text-sm text-[var(--ink-soft)]">
             <span>Draw pile: {game.draw_pile.length}</span>
@@ -152,7 +164,11 @@ export function GameBoard({
             />
           )}
 
-          {!mustResolveSquadron && !hasPendingDrawn && mode === 'idle' && selectedCardId && (
+          {!mustResolveSquadron &&
+            !hasPendingDrawn &&
+            mode === 'idle' &&
+            selectedCardId &&
+            (isMyNormalTurn || isMySpecialTurn) && (
             <ActionPanel
               cardId={selectedCardId}
               title={isMySpecialTurn ? 'Play during setup' : 'Play card'}
@@ -212,6 +228,7 @@ export function GameBoard({
               selectedCardId={selectedCardId}
               onSelect={setSelectedCardId}
               specialPhaseMode={isMySpecialTurn}
+              interactive={isMyNormalTurn || isMySpecialTurn}
             />
           </div>
         </div>
