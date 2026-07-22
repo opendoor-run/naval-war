@@ -62,7 +62,11 @@ const mockTaskForces: Record<string, TaskForceRow> = {
     ],
     minefields: [],
     smoke_active: false,
-    deep_six: ['ship-scheer'],
+    // Deep Six credits the sinker, not the ship's original owner - Alice's pile
+    // holds ships SHE has sunk. ship-scheer was sunk earlier this game (round 1,
+    // no longer in anyone's current fleet); ship-mutsu is Bob's Mutsu below,
+    // which Alice sank this round.
+    deep_six: ['ship-scheer', 'ship-mutsu'],
   },
   [BOB]: {
     game_id: 'preview',
@@ -73,7 +77,9 @@ const mockTaskForces: Record<string, TaskForceRow> = {
     ],
     minefields: [],
     smoke_active: true,
-    deep_six: ['ship-mutsu'],
+    // Bob's own Mutsu sank (above), but that credit belongs to Alice (sunkBy) -
+    // Bob's pile holds ship-hood, which HE sank (Carol's Hood below).
+    deep_six: ['ship-hood'],
   },
   [CAROL]: {
     game_id: 'preview',
@@ -84,7 +90,7 @@ const mockTaskForces: Record<string, TaskForceRow> = {
     ],
     minefields: [{ id: 'play-052', damage: 1, placedBy: ME }],
     smoke_active: false,
-    deep_six: ['ship-hood'],
+    deep_six: [],
   },
   [DAVE]: {
     game_id: 'preview',

@@ -146,8 +146,11 @@ function resolveAdditionalShip(ctx: GameContext, callerId: string) {
   game.harbor_pile = rest
   markGameDirty(ctx)
   const force = requireForce(ctx, callerId)
-  const sunkOnArrival = engine.addShipToForce(force, shipId)
+  const minelayer = force.minefields[force.minefields.length - 1]?.placedBy
+  const sunkOnArrival = engine.addShipToForce(force, shipId, ctx.taskForces)
   markForceDirty(ctx, callerId)
+  // Sunk on arrival credits the minelayer's Deep Six, not the receiving player's - their force needs saving too.
+  if (sunkOnArrival && minelayer) markForceDirty(ctx, minelayer)
   log(
     ctx,
     seatOf(ctx, callerId),
@@ -256,8 +259,9 @@ function applyCardEffect(ctx: GameContext, callerId: string, cardId: string, pay
         (s) => !s.sunk && getShip(s.shipId).gunSize === card.gunSize
       )
       if (!ownsMatchingGun) throw new HttpError(400, `You have no ${card.gunSize}" ship to fire this Salvo`)
-      const { sunk } = engine.fireSalvo(force, target.targetShipId, cardId, callerId)
+      const { sunk } = engine.fireSalvo(force, target.targetShipId, cardId, callerId, ctx.taskForces)
       markForceDirty(ctx, target.targetOwnerId!)
+      if (sunk) markForceDirty(ctx, callerId) // Deep Six credit lands on the bot's/player's own force
       log(
         ctx,
         seat,
@@ -277,9 +281,11 @@ function applyCardEffect(ctx: GameContext, callerId: string, cardId: string, pay
         target.targetShipId,
         target.targetSalvoCardId,
         cardId,
-        callerId
+        callerId,
+        ctx.taskForces
       )
       markForceDirty(ctx, target.targetOwnerId!)
+      if (sunk) markForceDirty(ctx, callerId)
       log(
         ctx,
         seat,
@@ -290,8 +296,9 @@ function applyCardEffect(ctx: GameContext, callerId: string, cardId: string, pay
     }
     case 'minefield': {
       const force = opponentForce(ctx, callerId, target.targetOwnerId)
-      const sunkIds = engine.placeMinefield(force, cardId, callerId)
+      const sunkIds = engine.placeMinefield(force, cardId, callerId, ctx.taskForces)
       markForceDirty(ctx, target.targetOwnerId!)
+      if (sunkIds.length > 0) markForceDirty(ctx, callerId)
       log(
         ctx,
         seat,
@@ -309,8 +316,9 @@ function applyCardEffect(ctx: GameContext, callerId: string, cardId: string, pay
         throw new HttpError(400, 'That ship cannot be targeted right now')
       }
       const roll = engine.rollDie()
-      const { sunk } = engine.resolveRollAttack(force, target.targetShipId, card.type, roll, callerId)
+      const { sunk } = engine.resolveRollAttack(force, target.targetShipId, card.type, roll, callerId, ctx.taskForces)
       markForceDirty(ctx, target.targetOwnerId!)
+      if (sunk) markForceDirty(ctx, callerId)
       ctx.game.discard_pile = [...ctx.game.discard_pile, cardId]
       markGameDirty(ctx)
       log(
@@ -511,8 +519,9 @@ async function handleAirstrike(ctx: GameContext, callerId: string, payload: Game
       continue
     }
     const roll = engine.rollDie()
-    const { sunk } = engine.resolveAirstrike(force, s.targetShipId, roll, callerId)
+    const { sunk } = engine.resolveAirstrike(force, s.targetShipId, roll, callerId, ctx.taskForces)
     markForceDirty(ctx, s.targetOwnerId)
+    if (sunk) markForceDirty(ctx, callerId)
     log(
       ctx,
       seat,
@@ -542,8 +551,9 @@ async function handleResolveDestroyer(ctx: GameContext, callerId: string, payloa
 
   const force = opponentForce(ctx, callerId, resolution.targetOwnerId)
   const roll = engine.rollDie()
-  const sunk = engine.resolveDestroyerAttack(force, resolution.priorityShipIds, roll, callerId)
+  const sunk = engine.resolveDestroyerAttack(force, resolution.priorityShipIds, roll, callerId, ctx.taskForces)
   markForceDirty(ctx, resolution.targetOwnerId)
+  if (sunk.length > 0) markForceDirty(ctx, callerId)
 
   ctx.destroyerSquadrons = ctx.destroyerSquadrons.filter((s) => s.id !== squadron.id)
   ctx.game.discard_pile = [...ctx.game.discard_pile, squadron.card_id]

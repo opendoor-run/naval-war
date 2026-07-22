@@ -109,8 +109,23 @@ export function isFleetEliminated(force: TaskForceRow): boolean {
   return force.ships.length > 0 && force.ships.every((s) => s.sunk)
 }
 
-/** Apply raw damage to a ship, marking it sunk (and crediting the sinker) if it crosses its hit points. Returns whether this call sank it. */
-function dealDamage(force: TaskForceRow, shipId: string, amount: number, sunkBy: string): boolean {
+/**
+ * Apply raw damage to a ship, marking it sunk (and crediting the sinker) if it
+ * crosses its hit points. Returns whether this call sank it.
+ *
+ * Per the rules, "ships you sink go into your Deep Six pile for points" — the
+ * sunk ship's card is credited to whoever sank it, not to the fleet it came
+ * from. `force` here is always the VICTIM's task force (their ship's `sunk`/
+ * `sunkBy` fields live there regardless); `allForces` lets us reach across to
+ * the attacker's own task force to push their Deep Six credit there.
+ */
+function dealDamage(
+  force: TaskForceRow,
+  shipId: string,
+  amount: number,
+  sunkBy: string,
+  allForces: Map<string, TaskForceRow>
+): boolean {
   const ship = force.ships.find((s) => s.shipId === shipId)
   if (!ship || ship.sunk || amount <= 0) return false
   ship.damage += amount
@@ -118,7 +133,7 @@ function dealDamage(force: TaskForceRow, shipId: string, amount: number, sunkBy:
   if (ship.damage >= card.hitPoints) {
     ship.sunk = true
     ship.sunkBy = sunkBy
-    force.deep_six.push(shipId)
+    allForces.get(sunkBy)?.deep_six.push(shipId)
     return true
   }
   return false
@@ -132,7 +147,8 @@ export function fireSalvo(
   force: TaskForceRow,
   shipId: string,
   salvoCardId: string,
-  firedBy: string
+  firedBy: string,
+  allForces: Map<string, TaskForceRow>
 ): { sunk: boolean } {
   const card = getPlayCard(salvoCardId)
   if (card.type !== 'salvo') throw new Error('Not a salvo card')
@@ -145,7 +161,7 @@ export function fireSalvo(
     firedBy,
     additionalDamage: [],
   })
-  const sunk = dealDamage(force, shipId, card.damage!, firedBy)
+  const sunk = dealDamage(force, shipId, card.damage!, firedBy, allForces)
   return { sunk }
 }
 
@@ -154,7 +170,8 @@ export function applyAdditionalDamage(
   shipId: string,
   targetSalvoCardId: string,
   damageCardId: string,
-  playedBy: string
+  playedBy: string,
+  allForces: Map<string, TaskForceRow>
 ): { sunk: boolean } {
   const dmgCard = getPlayCard(damageCardId)
   if (dmgCard.type !== 'additional_damage') throw new Error('Not an additional damage card')
@@ -163,7 +180,7 @@ export function applyAdditionalDamage(
   const salvo = ship.salvos.find((s) => s.id === targetSalvoCardId)
   if (!salvo) throw new Error('That salvo card is not attached to this ship')
   salvo.additionalDamage.push({ id: damageCardId, damage: dmgCard.damage!, playedBy })
-  const sunk = dealDamage(force, shipId, dmgCard.damage!, playedBy)
+  const sunk = dealDamage(force, shipId, dmgCard.damage!, playedBy, allForces)
   return { sunk }
 }
 
@@ -184,7 +201,8 @@ export function repairShip(force: TaskForceRow, shipId: string, targetSalvoCardI
 export function placeMinefield(
   force: TaskForceRow,
   minefieldCardId: string,
-  placedBy: string
+  placedBy: string,
+  allForces: Map<string, TaskForceRow>
 ): string[] {
   const card = getPlayCard(minefieldCardId)
   if (card.type !== 'minefield') throw new Error('Not a minefield card')
@@ -192,7 +210,7 @@ export function placeMinefield(
   const sunk: string[] = []
   for (const ship of force.ships) {
     if (ship.sunk) continue
-    if (dealDamage(force, ship.shipId, card.damage!, placedBy)) sunk.push(ship.shipId)
+    if (dealDamage(force, ship.shipId, card.damage!, placedBy, allForces)) sunk.push(ship.shipId)
   }
   return sunk
 }
@@ -202,13 +220,17 @@ export function clearMinefields(force: TaskForceRow) {
 }
 
 /** Add a ship (Additional Ship card) to a force; it immediately takes any active minefield damage. Returns true if it sank on arrival. */
-export function addShipToForce(force: TaskForceRow, shipId: string): boolean {
+export function addShipToForce(
+  force: TaskForceRow,
+  shipId: string,
+  allForces: Map<string, TaskForceRow>
+): boolean {
   const ship = newShipState(shipId)
   force.ships.push(ship)
   if (force.minefields.length === 0) return false
   const totalMineDamage = force.minefields.reduce((a, m) => a + m.damage, 0)
   const lastMine = force.minefields[force.minefields.length - 1]
-  return dealDamage(force, shipId, totalMineDamage, lastMine.placedBy)
+  return dealDamage(force, shipId, totalMineDamage, lastMine.placedBy, allForces)
 }
 
 /** Submarine (sinks on 5-6) or Torpedo Boat (sinks on 6 only). Roll is supplied by the caller so it can be logged. */
@@ -217,7 +239,8 @@ export function resolveRollAttack(
   shipId: string,
   attackType: 'submarine' | 'torpedo_boat',
   roll: number,
-  attackedBy: string
+  attackedBy: string,
+  allForces: Map<string, TaskForceRow>
 ): { sunk: boolean } {
   const threshold = attackType === 'submarine' ? 5 : 6
   if (roll < threshold) return { sunk: false }
@@ -225,7 +248,7 @@ export function resolveRollAttack(
   if (!ship) throw new Error('Target ship not in that task force')
   ship.sunk = true
   ship.sunkBy = attackedBy
-  force.deep_six.push(shipId)
+  allForces.get(attackedBy)?.deep_six.push(shipId)
   return { sunk: true }
 }
 
@@ -234,14 +257,15 @@ export function resolveAirstrike(
   force: TaskForceRow,
   shipId: string,
   roll: number,
-  attackedBy: string
+  attackedBy: string,
+  allForces: Map<string, TaskForceRow>
 ): { sunk: boolean } {
   if (roll !== 1) return { sunk: false }
   const ship = force.ships.find((s) => s.shipId === shipId)
   if (!ship) throw new Error('Target ship not in that task force')
   ship.sunk = true
   ship.sunkBy = attackedBy
-  force.deep_six.push(shipId)
+  allForces.get(attackedBy)?.deep_six.push(shipId)
   return { sunk: true }
 }
 
@@ -250,7 +274,8 @@ export function resolveDestroyerAttack(
   force: TaskForceRow,
   priorityShipIds: string[],
   count: number,
-  attackedBy: string
+  attackedBy: string,
+  allForces: Map<string, TaskForceRow>
 ): string[] {
   const sunk: string[] = []
   for (const shipId of priorityShipIds) {
@@ -259,7 +284,7 @@ export function resolveDestroyerAttack(
     if (!ship || ship.sunk) continue
     ship.sunk = true
     ship.sunkBy = attackedBy
-    force.deep_six.push(shipId)
+    allForces.get(attackedBy)?.deep_six.push(shipId)
     sunk.push(shipId)
   }
   return sunk
