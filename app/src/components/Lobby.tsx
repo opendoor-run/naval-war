@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { startGame } from '../lib/api'
+import { useNavigate } from 'react-router-dom'
+import { startGame, deleteGame } from '../lib/api'
 import type { GameRow, GamePlayerRow } from '../types/game'
 
 export function Lobby({
@@ -11,9 +12,11 @@ export function Lobby({
   players: GamePlayerRow[]
   isHost: boolean
 }) {
+  const navigate = useNavigate()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const inviteUrl = `${window.location.origin}/join/${game.invite_token}`
 
@@ -31,6 +34,18 @@ export function Lobby({
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleDelete() {
+    setError(null)
+    setBusy(true)
+    try {
+      await deleteGame(game.id)
+      navigate('/')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
       setBusy(false)
     }
   }
@@ -80,13 +95,45 @@ export function Lobby({
       {error && <p className="mb-3 text-sm text-red-300">{error}</p>}
 
       {isHost ? (
-        <button
-          onClick={handleStart}
-          disabled={busy || players.length < 3}
-          className="w-full rounded-md bg-amber-400 py-2 font-semibold text-black transition hover:bg-amber-300 disabled:opacity-50"
-        >
-          {players.length < 3 ? 'Need at least 3 players' : busy ? 'Starting...' : 'Start game'}
-        </button>
+        <div className="space-y-3">
+          <button
+            onClick={handleStart}
+            disabled={busy || players.length < 3}
+            className="w-full rounded-md bg-amber-400 py-2 font-semibold text-black transition hover:bg-amber-300 disabled:opacity-50"
+          >
+            {players.length < 3 ? 'Need at least 3 players' : busy ? 'Starting...' : 'Start game'}
+          </button>
+
+          {confirmingDelete ? (
+            <div className="rounded-md border border-red-400/40 bg-red-950/30 p-3 text-center">
+              <p className="mb-2 text-sm text-red-200">Delete this game for everyone? This can't be undone.</p>
+              <div className="flex justify-center gap-2">
+                <button
+                  onClick={handleDelete}
+                  disabled={busy}
+                  className="rounded-md bg-red-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-red-400 disabled:opacity-50"
+                >
+                  {busy ? 'Deleting...' : 'Yes, delete it'}
+                </button>
+                <button
+                  onClick={() => setConfirmingDelete(false)}
+                  disabled={busy}
+                  className="rounded-md border border-white/20 px-4 py-1.5 text-sm text-white/80 hover:bg-white/10"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              disabled={busy}
+              className="w-full rounded-md border border-red-400/30 py-2 text-sm text-red-300 hover:bg-red-950/30 disabled:opacity-50"
+            >
+              Delete game
+            </button>
+          )}
+        </div>
       ) : (
         <p className="text-center text-white/60">Waiting for the host to start the game...</p>
       )}

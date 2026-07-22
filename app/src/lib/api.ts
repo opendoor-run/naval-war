@@ -31,6 +31,10 @@ export function startGame(gameId: string) {
   return invoke<{ ok: true }>('start-game', { gameId })
 }
 
+export function deleteGame(gameId: string) {
+  return invoke<{ ok: true }>('delete-game', { gameId })
+}
+
 export function gameAction(payload: GameActionPayload) {
   return invoke<Record<string, unknown>>('game-action', payload as unknown as Record<string, unknown>)
 }

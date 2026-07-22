@@ -45,9 +45,9 @@ you've created a game) is a separate, ordinary step you do per-game.
 
 ## 2. Supabase: Edge Functions (the rules engine)
 
-The game's rules engine runs as four Edge Functions (`create-game`,
-`join-game`, `start-game`, `game-action`). These need the Supabase CLI to
-deploy - here's the from-scratch path:
+The game's rules engine runs as five Edge Functions (`create-game`,
+`join-game`, `start-game`, `game-action`, `delete-game`). These need the
+Supabase CLI to deploy - here's the from-scratch path:
 
 1. Install the CLI (pick one):
    ```bash
@@ -69,6 +69,7 @@ deploy - here's the from-scratch path:
    supabase functions deploy join-game
    supabase functions deploy start-game
    supabase functions deploy game-action
+   supabase functions deploy delete-game
    ```
 
 That's it for the backend - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and
