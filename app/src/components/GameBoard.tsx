@@ -8,6 +8,7 @@ import { GameLog } from './GameLog'
 import { ActionPanel } from './ActionPanel'
 import { AirstrikePanel } from './AirstrikePanel'
 import { DestroyerResolvePanel } from './DestroyerResolvePanel'
+import { AppHeader } from './AppHeader'
 import type {
   ActionTarget,
   AirstrikeDeclaration,
@@ -84,6 +85,7 @@ export function GameBoard({
 
   return (
     <div className="command-room min-h-screen">
+      <AppHeader />
       <div className="mx-auto max-w-[clamp(72rem,92vw,100rem)] px-4 pt-6">
         <TurnTracker game={game} players={players} destroyerSquadrons={destroyerSquadrons} myUserId={myUserId} />
       </div>

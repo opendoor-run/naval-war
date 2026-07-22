@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { startGame, deleteGame } from '../lib/api'
+import { AppHeader } from './AppHeader'
 import type { GameRow, GamePlayerRow } from '../types/game'
 
 export function Lobby({
@@ -52,6 +53,7 @@ export function Lobby({
 
   return (
     <div className="command-room min-h-screen">
+      <AppHeader />
       <div className="mx-auto max-w-lg px-4 py-12">
         <h1 className="ptc-display text-3xl">Lobby</h1>
         <p className="ptc-mono mb-6 mt-1 text-sm text-[var(--ink-soft)]">

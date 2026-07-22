@@ -6,6 +6,7 @@ import { gameAction } from '../lib/api'
 import { Lobby } from '../components/Lobby'
 import { GameBoard } from '../components/GameBoard'
 import { ChatPanel } from '../components/ChatPanel'
+import { AppHeader } from '../components/AppHeader'
 
 export default function GamePage() {
   const { gameId } = useParams<{ gameId: string }>()
@@ -14,13 +15,21 @@ export default function GamePage() {
   const { messages, sendMessage, sending } = useChatMessages(gameId, user?.id)
 
   if (authLoading || loading || !game) {
-    return <div className="command-room ptc-mono flex min-h-screen items-center justify-center">Loading...</div>
+    return (
+      <div className="command-room min-h-screen">
+        <AppHeader />
+        <p className="ptc-mono flex min-h-[calc(100vh-40px)] items-center justify-center">Loading...</p>
+      </div>
+    )
   }
   const myPlayer = players.find((p) => p.user_id === user?.id)
   if (!myPlayer || !user) {
     return (
-      <div className="command-room ptc-mono flex min-h-screen items-center justify-center">
-        You're not seated in this game.
+      <div className="command-room min-h-screen">
+        <AppHeader />
+        <p className="ptc-mono flex min-h-[calc(100vh-40px)] items-center justify-center">
+          You're not seated in this game.
+        </p>
       </div>
     )
   }
