@@ -6,7 +6,7 @@ import { SignInGate } from '../components/SignInGate'
 
 export default function JoinPage() {
   const { token } = useParams<{ token: string }>()
-  const { user, profile, loading, sendSignInLink, setDisplayName } = useAuth()
+  const { user, profile, loading, signInWithPassword, setDisplayName } = useAuth()
   const navigate = useNavigate()
   const [nameInput, setNameInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -25,7 +25,7 @@ export default function JoinPage() {
   if (!user) {
     return (
       <div className="felt-table flex min-h-screen items-center justify-center text-white">
-        <SignInGate onSendLink={sendSignInLink} title="Sign in to join" />
+        <SignInGate onSignIn={signInWithPassword} title="Sign in to join" />
       </div>
     )
   }

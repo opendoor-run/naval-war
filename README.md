@@ -18,29 +18,30 @@ deployed to Vercel. You don't need any prior experience with either.
    Sign-ins** is turned **off** (it's off by default). Under the **Email**
    provider, turn **Allow new users to sign up** **off** too. Together these
    mean nobody can create their own account - the only way in is an account
-   you create for them (next step).
-4. Go to **Authentication → URL Configuration** and add your app's URL(s) to
-   **Redirect URLs**, e.g. `http://localhost:5173/**` for local dev and
-   `https://your-app.vercel.app/**` once you've deployed. This is what lets
-   the sign-in link Supabase emails someone actually bring them back to the
-   app instead of getting rejected.
+   you create for them (next step). No email sending is used anywhere in this
+   app, so there's nothing to configure for that.
 
-## 1b. Inviting your players
+## 1b. Creating logins for your players
 
-This game is closed - only people you explicitly invite can ever sign in.
+This game is closed - accounts only exist if you create them. There's no
+sign-up flow and no email involved at all; you hand out a login and password
+directly (text, in person, however you like).
+
 For each person in your group:
 
 1. Go to **Authentication → Users** in the Supabase dashboard.
-2. Click **Invite user**, enter their email, and send it.
-3. Supabase emails them a sign-in link. Clicking it brings them straight into
-   the app, already signed in - no password needed then or ever again (future
-   visits, they enter their email on the app's sign-in screen and Supabase
-   emails them a fresh link).
+2. Click **Add user → Create new user**.
+3. Enter an email-shaped login (their real email address is simplest -
+   nothing ever gets sent to it, it's just used as their username) and a
+   password you choose.
+4. Check **Auto Confirm User**. This is the important part - it skips
+   Supabase's confirmation email entirely, so nothing is sent and they can
+   sign in immediately.
+5. Save, and tell them the login + password however you like.
 
 You only need to do this once per person, however many games you play with
 them. Sharing a specific game's invite link (from inside the app, once
-you've created a game) is a separate, ordinary step you do per-game, same as
-before.
+you've created a game) is a separate, ordinary step you do per-game.
 
 ## 2. Supabase: Edge Functions (the rules engine)
 

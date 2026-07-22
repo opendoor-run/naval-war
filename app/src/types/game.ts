@@ -87,6 +87,14 @@ export interface GameLogRow {
   created_at: string
 }
 
+export interface ChatMessageRow {
+  id: number
+  game_id: string
+  user_id: string
+  message: string
+  created_at: string
+}
+
 export type ActionType = 'draw' | 'play' | 'discard' | 'pass_special' | 'airstrike' | 'resolve_destroyer'
 
 export interface ActionTarget {

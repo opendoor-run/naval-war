@@ -25,8 +25,6 @@ export function useAuth() {
     let cancelled = false
 
     async function init() {
-      // supabase-js already parses a magic-link/invite token out of the URL
-      // (on the redirect back from the invite email) before this resolves.
       const { data } = await supabase.auth.getSession()
       const session = data.session
       if (cancelled) return
@@ -49,12 +47,9 @@ export function useAuth() {
     }
   }, [loadProfile])
 
-  /** Sends a passwordless sign-in link. Only works for emails an admin has already invited - new signups are disabled project-wide. */
-  const sendSignInLink = useCallback(async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.href },
-    })
+  /** Signs in with an email+password the admin created for this player via the Supabase dashboard. No email is ever sent. */
+  const signInWithPassword = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
   }, [])
 
@@ -73,5 +68,5 @@ export function useAuth() {
     [user]
   )
 
-  return { user, profile, loading, sendSignInLink, signOut, setDisplayName }
+  return { user, profile, loading, signInWithPassword, signOut, setDisplayName }
 }

@@ -12,7 +12,7 @@ interface MyGame {
 }
 
 export default function HomePage() {
-  const { user, profile, loading, sendSignInLink, signOut, setDisplayName } = useAuth()
+  const { user, profile, loading, signInWithPassword, signOut, setDisplayName } = useAuth()
   const navigate = useNavigate()
   const [nameInput, setNameInput] = useState('')
   const [targetScore, setTargetScore] = useState(100)
@@ -48,7 +48,7 @@ export default function HomePage() {
   if (!user) {
     return (
       <Centered>
-        <SignInGate onSendLink={sendSignInLink} />
+        <SignInGate onSignIn={signInWithPassword} />
       </Centered>
     )
   }
