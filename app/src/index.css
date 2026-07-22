@@ -52,7 +52,8 @@ body {
   color: var(--ink);
 }
 
-/* The plotting-table surface: aged parchment with a faint procedural grain. */
+/* The plotting-table surface: aged parchment, weathered from long use in the field -
+   paper grain, coffee/water stains, scorched corners, a few creases. */
 .command-room {
   position: relative;
   background: var(--parchment);
@@ -64,9 +65,42 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.14;
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+/* Stains, scorching, and creases - the map has been leaned on, spilled on, and
+   pinned up under a hot lamp for weeks. Heaviest wear in the bottom-right
+   quadrant, like a chart worked over by a right-handed plotter for years. */
+.command-room::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    /* creases where the chart's been folded and re-pinned */
+    linear-gradient(100deg, transparent 39%, rgba(21, 39, 56, 0.08) 40%, rgba(21, 39, 56, 0.08) 40.5%, transparent 42%),
+    linear-gradient(12deg, transparent 62%, rgba(21, 39, 56, 0.07) 62.8%, rgba(21, 39, 56, 0.07) 63.4%, transparent 65%),
+    linear-gradient(150deg, transparent 71%, rgba(21, 39, 56, 0.06) 71.6%, rgba(21, 39, 56, 0.06) 72.1%, transparent 73.5%),
+    /* upper-left / center wear, lighter than the bottom-right */
+    radial-gradient(circle 130px at 12% 18%, rgba(74, 82, 64, 0.18), rgba(74, 82, 64, 0.18) 90%, transparent 96%),
+    radial-gradient(ellipse 340px 260px at 88% 12%, rgba(74, 82, 64, 0.14), transparent 70%),
+    radial-gradient(ellipse 260px 300px at 6% 88%, rgba(21, 39, 56, 0.12), transparent 65%),
+    radial-gradient(ellipse 500px 300px at 42% 42%, rgba(122, 88, 48, 0.08), transparent 72%),
+    /* bottom-right quadrant: heavy stain cluster */
+    radial-gradient(circle 160px at 82% 70%, rgba(122, 88, 48, 0.22), rgba(122, 88, 48, 0.22) 85%, transparent 95%),
+    radial-gradient(ellipse 300px 240px at 95% 60%, rgba(21, 39, 56, 0.16), transparent 72%),
+    radial-gradient(ellipse 420px 380px at 78% 92%, rgba(122, 88, 48, 0.18), transparent 68%),
+    radial-gradient(circle 110px at 68% 78%, rgba(74, 82, 64, 0.16), rgba(74, 82, 64, 0.16) 88%, transparent 95%),
+    radial-gradient(ellipse 260px 300px at 92% 95%, rgba(21, 39, 56, 0.2), transparent 65%),
+    radial-gradient(ellipse 380px 260px at 60% 65%, rgba(122, 88, 48, 0.1), transparent 72%),
+    /* scorched, dog-eared corners - bottom-right darkest */
+    radial-gradient(ellipse 340px 300px at 0% 0%, rgba(21, 39, 56, 0.24), transparent 58%),
+    radial-gradient(ellipse 340px 300px at 100% 0%, rgba(21, 39, 56, 0.2), transparent 58%),
+    radial-gradient(ellipse 460px 420px at 100% 100%, rgba(21, 39, 56, 0.32), transparent 62%),
+    radial-gradient(ellipse 380px 340px at 0% 100%, rgba(21, 39, 56, 0.22), transparent 60%);
+  mix-blend-mode: multiply;
 }
 .command-room > * {
   position: relative;
