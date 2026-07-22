@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { createGame } from '../lib/api'
 import { SignInGate } from '../components/SignInGate'
+import { InstructionsModal } from '../components/InstructionsModal'
 
 interface MyGame {
   game_id: string
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [myGames, setMyGames] = useState<MyGame[]>([])
+  const [showInstructions, setShowInstructions] = useState(false)
 
   useEffect(() => {
     if (profile?.display_name) setNameInput(profile.display_name)
@@ -86,6 +88,15 @@ export default function HomePage() {
         </p>
 
         <div className="mb-6 rounded-xl border border-white/15 bg-black/25 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-medium text-white/80">Create a game</h2>
+            <button
+              onClick={() => setShowInstructions(true)}
+              className="rounded-md border border-white/20 px-3 py-1 text-xs text-white/80 hover:bg-white/10"
+            >
+              Instructions
+            </button>
+          </div>
           <label className="mb-1 block text-sm font-medium text-white/80">Your display name</label>
           <input
             className="mb-4 w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white placeholder-white/40 outline-none focus:border-amber-300"
@@ -147,6 +158,7 @@ export default function HomePage() {
           </div>
         )}
       </div>
+      {showInstructions && <InstructionsModal onClose={() => setShowInstructions(false)} />}
     </div>
   )
 }

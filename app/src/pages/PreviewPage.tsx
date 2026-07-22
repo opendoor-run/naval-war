@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lobby } from '../components/Lobby'
 import { GameBoard } from '../components/GameBoard'
 import { ChatPanel } from '../components/ChatPanel'
+import { InstructionsModal } from '../components/InstructionsModal'
 import type {
   ChatMessageRow,
   DestroyerSquadronRow,
@@ -120,6 +121,7 @@ const initialMockChat: ChatMessageRow[] = [
 export default function PreviewPage() {
   const [view, setView] = useState<'board' | 'lobby'>('board')
   const [chat, setChat] = useState<ChatMessageRow[]>(initialMockChat)
+  const [showInstructions, setShowInstructions] = useState(false)
 
   async function mockDispatch() {
     // No-op: this is a static design preview, not wired to a real backend.
@@ -146,7 +148,11 @@ export default function PreviewPage() {
         >
           Lobby
         </button>
+        <button onClick={() => setShowInstructions(true)} className="rounded-full px-2 py-0.5 hover:bg-white/10">
+          Instructions
+        </button>
       </div>
+      {showInstructions && <InstructionsModal onClose={() => setShowInstructions(false)} />}
 
       {view === 'lobby' ? (
         <Lobby game={mockGameLobby} players={mockPlayers} isHost />
