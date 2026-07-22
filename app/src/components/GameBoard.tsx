@@ -84,10 +84,10 @@ export function GameBoard({
 
   return (
     <div className="command-room min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 pt-6">
+      <div className="mx-auto max-w-[clamp(72rem,92vw,100rem)] px-4 pt-6">
         <TurnTracker game={game} players={players} destroyerSquadrons={destroyerSquadrons} myUserId={myUserId} />
       </div>
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 px-4 pb-6 pt-4 lg:grid-cols-[1fr_280px]">
+      <div className="mx-auto grid max-w-[clamp(72rem,92vw,100rem)] grid-cols-1 gap-4 px-4 pb-6 pt-4 lg:grid-cols-[1fr_280px] 2xl:grid-cols-[1fr_340px]">
         <div className="space-y-4">
           <div className="ptc-mono flex flex-wrap items-center gap-3 text-sm text-[var(--ink-soft)]">
             <span>Draw pile: {game.draw_pile.length}</span>
@@ -99,7 +99,7 @@ export function GameBoard({
           </div>
 
           {/* Opponent fleets */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
             {players
               .filter((p) => p.user_id !== myUserId)
               .map((p) => (
