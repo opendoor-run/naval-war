@@ -25,6 +25,7 @@ export interface GamePlayerRow {
   display_name: string
   total_score: number
   is_eliminated_this_round: boolean
+  is_bot: boolean
 }
 
 export interface HandRow {
@@ -95,7 +96,7 @@ export interface ChatMessageRow {
   created_at: string
 }
 
-export type ActionType = 'draw' | 'play' | 'discard' | 'pass_special' | 'airstrike' | 'resolve_destroyer'
+export type ActionType = 'draw' | 'play' | 'discard' | 'pass_special' | 'airstrike' | 'resolve_destroyer' | 'add_bot'
 
 export interface ActionTarget {
   targetOwnerId?: string

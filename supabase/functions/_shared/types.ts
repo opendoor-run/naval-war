@@ -25,6 +25,7 @@ export interface GamePlayerRow {
   display_name: string
   total_score: number
   is_eliminated_this_round: boolean
+  is_bot: boolean
 }
 
 export interface HandRow {
@@ -86,6 +87,7 @@ export type ActionType =
   | 'pass_special'
   | 'airstrike'
   | 'resolve_destroyer'
+  | 'add_bot'
 
 export interface ActionTarget {
   targetOwnerId?: string

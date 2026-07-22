@@ -1,5 +1,6 @@
 import { getPlayCard, getShip, IMMEDIATE_PLAY_TYPES, SPECIAL_PHASE_TYPES } from './cards.ts'
 import * as engine from './engine.ts'
+import { BOT_PROFILES } from './ai.ts'
 import {
   GameContext,
   findPlayer,
@@ -64,6 +65,37 @@ function checkEliminationAndMaybeEndRound(ctx: GameContext, ownerId: string): bo
   }
 
   return engine.countActive(ctx.players) === 1
+}
+
+// ───────────────────────────────────────────────────────────────────────
+// add_bot (lobby only - host seats one of the fixed bot accounts)
+// ───────────────────────────────────────────────────────────────────────
+
+async function handleAddBot(ctx: GameContext, callerId: string) {
+  const game = ctx.game
+  if (game.status !== 'lobby') throw new HttpError(400, 'Bots can only be added before the game starts')
+  if (game.host_id !== callerId) throw new HttpError(403, 'Only the host can add a bot')
+  if (ctx.players.length >= game.max_players) throw new HttpError(400, 'This game is full')
+
+  const usedBotIds = new Set(ctx.players.filter((p) => p.is_bot).map((p) => p.user_id))
+  const bot = BOT_PROFILES.find((b) => !usedBotIds.has(b.id))
+  if (!bot) throw new HttpError(400, 'No more bots available')
+
+  const seat = ctx.players.length
+  const { error: playerErr } = await ctx.db
+    .from('game_players')
+    .insert({ game_id: game.id, user_id: bot.id, seat_index: seat, display_name: bot.name, is_bot: true })
+  if (playerErr) throw playerErr
+  const { error: handErr } = await ctx.db.from('hands').insert({ game_id: game.id, user_id: bot.id, cards: [] })
+  if (handErr) throw handErr
+  const { error: forceErr } = await ctx.db
+    .from('task_forces')
+    .insert({ game_id: game.id, owner_id: bot.id, ships: [], minefields: [], smoke_active: false, deep_six: [] })
+  if (forceErr) throw forceErr
+
+  log(ctx, seat, `${bot.name} joined as an AI opponent.`)
+  await ctxSaveOnly(ctx)
+  return { userId: bot.id, seatIndex: seat }
 }
 
 // ───────────────────────────────────────────────────────────────────────
@@ -713,6 +745,8 @@ export async function dispatchAction(ctx: GameContext, callerId: string, payload
       return handleAirstrike(ctx, callerId, payload)
     case 'resolve_destroyer':
       return handleResolveDestroyer(ctx, callerId, payload)
+    case 'add_bot':
+      return handleAddBot(ctx, callerId)
     default:
       throw new HttpError(400, `Unknown action type: ${(payload as { type: string }).type}`)
   }

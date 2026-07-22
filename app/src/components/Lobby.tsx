@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { startGame, deleteGame } from '../lib/api'
+import { startGame, deleteGame, gameAction } from '../lib/api'
 import { AppHeader } from './AppHeader'
 import type { GameRow, GamePlayerRow } from '../types/game'
 
@@ -32,6 +32,18 @@ export function Lobby({
     setBusy(true)
     try {
       await startGame(game.id)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleAddBot() {
+    setError(null)
+    setBusy(true)
+    try {
+      await gameAction({ gameId: game.id, type: 'add_bot' })
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -87,7 +99,8 @@ export function Lobby({
               >
                 <span className="text-[var(--ink-soft)]">#{p.seat_index + 1}</span>
                 <span>{p.display_name}</span>
-                {p.user_id === game.host_id && <span className="ptc-stamp ml-auto px-1.5 py-0.5 text-[10px]">Host</span>}
+                {p.is_bot && <span className="ptc-stamp ml-auto px-1.5 py-0.5 text-[10px]">AI</span>}
+                {p.user_id === game.host_id && <span className="ptc-stamp px-1.5 py-0.5 text-[10px]">Host</span>}
               </li>
             ))}
           </ul>
@@ -101,6 +114,14 @@ export function Lobby({
 
         {isHost ? (
           <div className="space-y-3">
+            <button
+              onClick={handleAddBot}
+              disabled={busy || players.length >= game.max_players}
+              className="ptc-btn w-full py-2 text-sm"
+            >
+              Add AI Opponent
+            </button>
+
             <button onClick={handleStart} disabled={busy || players.length < 3} className="ptc-btn ptc-btn-primary w-full py-2">
               {players.length < 3 ? 'Need at least 3 players' : busy ? 'Starting...' : 'Start Game'}
             </button>

@@ -19,10 +19,10 @@ const CAROL = 'carol'
 const DAVE = 'dave'
 
 const mockPlayers: GamePlayerRow[] = [
-  { game_id: 'preview', user_id: ME, seat_index: 0, display_name: 'Alice (you)', total_score: 34, is_eliminated_this_round: false },
-  { game_id: 'preview', user_id: BOB, seat_index: 1, display_name: 'Bob', total_score: 51, is_eliminated_this_round: false },
-  { game_id: 'preview', user_id: CAROL, seat_index: 2, display_name: 'Carol', total_score: 12, is_eliminated_this_round: false },
-  { game_id: 'preview', user_id: DAVE, seat_index: 3, display_name: 'Dave', total_score: 28, is_eliminated_this_round: false },
+  { game_id: 'preview', user_id: ME, seat_index: 0, display_name: 'Alice (you)', total_score: 34, is_eliminated_this_round: false, is_bot: false },
+  { game_id: 'preview', user_id: BOB, seat_index: 1, display_name: 'Bob', total_score: 51, is_eliminated_this_round: false, is_bot: false },
+  { game_id: 'preview', user_id: CAROL, seat_index: 2, display_name: 'Carol', total_score: 12, is_eliminated_this_round: false, is_bot: false },
+  { game_id: 'preview', user_id: DAVE, seat_index: 3, display_name: 'Dave', total_score: 28, is_eliminated_this_round: false, is_bot: false },
 ]
 
 const mockGameBoard: GameRow = {
