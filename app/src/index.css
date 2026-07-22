@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  background: #0b2118;
+  color: #f2ede1;
+}
+
+.felt-table {
+  background:
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.05), transparent 60%),
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.04) 0 2px, transparent 2px 6px),
+    linear-gradient(160deg, #1d5c3f, #0b3524 70%);
+}
