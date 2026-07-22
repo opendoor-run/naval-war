@@ -55,20 +55,13 @@ export interface BotView {
   destroyerSquadrons: DestroyerSquadronRow[]
 }
 
-export interface ChooseOptions {
-  /** True once the bot has already taken its draw this turn (the loop sets this
-      after a normal-card draw that didn't end the turn). Governs whether a
-      fresh-turn bot draws/airstrikes or must now play/discard to end its turn. */
-  hasDrawnThisTurn?: boolean
-}
-
 // ───────────────────────────────────────────────────────────────────────
 // Heuristic weights — "board position" values. All from the bot's own
 // perspective; positive is good for the bot. These are deliberately grouped
 // and named so they can be tuned in one place.
 // ───────────────────────────────────────────────────────────────────────
 
-export const WEIGHTS = {
+const WEIGHTS = {
   /** Each hit point of score the bot has banked (ships the bot has sunk). This
       is the literal win condition, so it dominates. */
   ownBankedPoint: 10,
@@ -115,7 +108,7 @@ function liveShips(force: TaskForceRow) {
 
 /** Points banked by `userId` under the documented rules: the hit points of
     every ship anywhere that this player sank. */
-export function bankedPoints(forces: Map<string, TaskForceRow>, userId: string): number {
+function bankedPoints(forces: Map<string, TaskForceRow>, userId: string): number {
   let total = 0
   for (const force of forces.values()) {
     for (const s of force.ships) {
@@ -126,7 +119,7 @@ export function bankedPoints(forces: Map<string, TaskForceRow>, userId: string):
 }
 
 /** Weighted board value from the bot's perspective. Higher is better for the bot. */
-export function evaluateBoard(
+function evaluateBoard(
   forces: Map<string, TaskForceRow>,
   players: GamePlayerRow[],
   botUserId: string
@@ -680,7 +673,10 @@ function resolvePendingCard(view: BotView, botUserId: string, cardId: string): G
 export function chooseBotAction(
   view: BotView,
   botUserId: string,
-  opts: ChooseOptions = {}
+  /** True once the bot has already taken its draw this turn (the loop sets this
+      after a normal-card draw that didn't end the turn). Governs whether a
+      fresh-turn bot draws/airstrikes or must now play/discard to end its turn. */
+  hasDrawnThisTurn = false
 ): GameActionPayload | null {
   const me = view.players.find((p) => p.user_id === botUserId)
   if (!me) return null
@@ -695,7 +691,7 @@ export function chooseBotAction(
   if (view.game.status === 'in_progress') {
     if (view.game.turn_seat !== seat) return null
     if (me.is_eliminated_this_round) return null
-    return chooseNormalTurnAction(view, botUserId, hand, opts.hasDrawnThisTurn ?? false)
+    return chooseNormalTurnAction(view, botUserId, hand, hasDrawnThisTurn)
   }
 
   return null

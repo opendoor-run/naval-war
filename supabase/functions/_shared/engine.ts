@@ -11,7 +11,7 @@ import type {
 // Randomness
 // ───────────────────────────────────────────────────────────────────────
 
-export function shuffle<T>(arr: T[]): T[] {
+function shuffle<T>(arr: T[]): T[] {
   const out = arr.slice()
   for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(secureRandom() * (i + 1))
@@ -79,22 +79,9 @@ export function newShipState(shipId: string): ShipState {
   return { shipId, damage: 0, sunk: false, salvos: [] }
 }
 
-export function emptyTaskForce(gameId: string, ownerId: string): TaskForceRow {
-  return { game_id: gameId, owner_id: ownerId, ships: [], minefields: [], smoke_active: false, deep_six: [] }
-}
-
 // ───────────────────────────────────────────────────────────────────────
 // Ship / task-force helpers
 // ───────────────────────────────────────────────────────────────────────
-
-export function totalDamage(ship: ShipState): number {
-  const salvoDamage = ship.salvos.reduce((sum, s) => sum + s.damage, 0)
-  const addDamage = ship.salvos.reduce(
-    (sum, s) => sum + s.additionalDamage.reduce((a, d) => a + d.damage, 0),
-    0
-  )
-  return salvoDamage + addDamage
-}
 
 /** A carrier can't be targeted until every other (non-sunk) ship in the fleet is sunk. */
 export function isTargetable(force: TaskForceRow, shipId: string): boolean {

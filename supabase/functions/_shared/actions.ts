@@ -94,7 +94,7 @@ async function handleAddBot(ctx: GameContext, callerId: string) {
   if (forceErr) throw forceErr
 
   log(ctx, seat, `${bot.name} joined as an AI opponent.`)
-  await ctxSaveOnly(ctx)
+  await saveContext(ctx)
   return { userId: bot.id, seatIndex: seat }
 }
 
@@ -137,7 +137,7 @@ async function handleDraw(ctx: GameContext, callerId: string) {
     }
     game.pending_drawn_card = cardId
     log(ctx, seat, `${nameOf(ctx, callerId)} drew ${describeCard(cardId)} - must resolve it now.`)
-    await ctxSaveOnly(ctx)
+    await saveContext(ctx)
     return { drawnCard: cardId, resolved: false }
   }
 
@@ -146,7 +146,7 @@ async function handleDraw(ctx: GameContext, callerId: string) {
   hand.cards = [...hand.cards, cardId]
   markHandDirty(ctx, callerId)
   log(ctx, seat, `${nameOf(ctx, callerId)} drew a card.`)
-  await ctxSaveOnly(ctx)
+  await saveContext(ctx)
   return { drawnCard: cardId, resolved: false }
 }
 
@@ -250,7 +250,7 @@ async function handlePlay(ctx: GameContext, callerId: string, payload: GameActio
     // Rare, but a mine/submarine/torpedo played during setup could eliminate
     // a fleet outright - check even though normal turns haven't begun yet.
     if (!(await maybeEndRoundOnly(ctx))) {
-      await ctxSaveOnly(ctx)
+      await saveContext(ctx)
     }
     return { resolved: true, endedTurn: false }
   }
@@ -512,7 +512,7 @@ async function handlePassSpecial(ctx: GameContext, callerId: string) {
     game.special_phase_seat = next
   }
   markGameDirty(ctx)
-  await ctxSaveOnly(ctx)
+  await saveContext(ctx)
   return { resolved: true }
 }
 
@@ -601,7 +601,7 @@ async function handleResolveDestroyer(ctx: GameContext, callerId: string, payloa
   if (sunk.length > 0) checkEliminationAndMaybeEndRound(ctx, resolution.targetOwnerId)
 
   if (!(await maybeEndRoundOnly(ctx))) {
-    await ctxSaveOnly(ctx)
+    await saveContext(ctx)
   }
   return { resolved: true, roll, sunk }
 }
@@ -646,7 +646,7 @@ async function finishTurnAction(ctx: GameContext) {
     }
   }
 
-  await ctxSaveOnly(ctx)
+  await saveContext(ctx)
 }
 
 function currentTurnUserId(ctx: GameContext): string {
@@ -681,7 +681,7 @@ async function endRound(ctx: GameContext) {
     log(ctx, leaders[0].seat_index, `${leaders[0].display_name} wins the game with ${maxScore} points!`)
     markGameDirty(ctx)
     await savePlayerScores(ctx.db, game.id, ctx.players)
-    await ctxSaveOnly(ctx)
+    await saveContext(ctx)
     return
   }
 
@@ -719,10 +719,6 @@ async function endRound(ctx: GameContext) {
   log(ctx, newDealer.seat_index, `Round ${game.current_round} begins. ${newDealer.display_name} deals.`)
 
   await savePlayerScores(ctx.db, game.id, ctx.players)
-  await ctxSaveOnly(ctx)
-}
-
-async function ctxSaveOnly(ctx: GameContext) {
   await saveContext(ctx)
 }
 

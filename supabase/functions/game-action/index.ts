@@ -18,7 +18,7 @@ async function runBotTurns(db: SupabaseClient, gameId: string) {
     if (!player || !player.is_bot || player.is_eliminated_this_round) return
 
     if (!turnState || turnState.seat !== seat) turnState = { seat, hasDrawn: false }
-    const action = chooseBotAction(ctx, player.user_id, { hasDrawnThisTurn: turnState.hasDrawn })
+    const action = chooseBotAction(ctx, player.user_id, turnState.hasDrawn)
     if (!action) return
 
     const result = (await dispatchAction(ctx, player.user_id, action)) as { resolved?: boolean }

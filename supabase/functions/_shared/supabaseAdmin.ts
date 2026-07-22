@@ -9,7 +9,7 @@ export function adminClient() {
 }
 
 /** Client scoped to the caller's own JWT, used only to identify who is calling. */
-export function callerClient(req: Request) {
+function callerClient(req: Request) {
   const url = Deno.env.get('SUPABASE_URL')!
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
   const authHeader = req.headers.get('Authorization') ?? ''
