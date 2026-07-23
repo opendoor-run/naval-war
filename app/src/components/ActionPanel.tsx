@@ -36,7 +36,11 @@ export function ActionPanel({
   const [targetSalvoId, setTargetSalvoId] = useState<string | null>(null)
   const [targetSquadronId, setTargetSquadronId] = useState<string | null>(null)
 
-  const opponents = players.filter((p) => p.user_id !== myUserId && !p.is_eliminated_this_round)
+  // Smoke blocks everything except Submarines and Additional Damage.
+  const bypassesSmoke = card.type === 'submarine' || card.type === 'additional_damage'
+  const opponents = players
+    .filter((p) => p.user_id !== myUserId && !p.is_eliminated_this_round)
+    .filter((p) => bypassesSmoke || !taskForces[p.user_id]?.smoke_active)
   const noTargetNeeded = ['additional_ship', 'minesweeper', 'smoke', 'destroyer_squadron'].includes(card.type)
   const isOwnShipCard = card.type === 'repair'
 

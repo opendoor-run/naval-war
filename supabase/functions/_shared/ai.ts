@@ -298,6 +298,8 @@ function rollAttackCandidates(
   const before = evaluateBoard(view.taskForces, view.players, botUserId)
   const cands: Candidate[] = []
   for (const { ownerId, force } of livingOpponents(view, botUserId)) {
+    // Smoke blocks everything except Submarines and Additional Damage.
+    if (type === 'torpedo_boat' && force.smoke_active) continue
     for (const ship of force.ships) {
       if (!engine.isTargetable(force, ship.shipId)) continue
       const afterSink = evalAfter(view, botUserId, (forces) => {
@@ -348,6 +350,7 @@ function minefieldCandidates(view: BotView, botUserId: string, cardId: string, s
   const cands: Candidate[] = []
   for (const { ownerId, force } of livingOpponents(view, botUserId)) {
     if (setupPhase && force.minefields.length > 0) continue // one mine per fleet during setup
+    if (force.smoke_active) continue // smoke blocks minefields
     const score =
       evalAfter(view, botUserId, (forces) => {
         engine.placeMinefield(forces.get(ownerId)!, cardId, botUserId, forces)
@@ -463,6 +466,7 @@ function bestAirstrike(view: BotView, botUserId: string): Candidate | null {
   // Rank every targetable enemy ship by the value of sinking it.
   const targets: { ownerId: string; shipId: string; value: number }[] = []
   for (const { ownerId, force } of livingOpponents(view, botUserId)) {
+    if (force.smoke_active) continue // smoke blocks airstrikes
     for (const ship of force.ships) {
       if (!engine.isTargetable(force, ship.shipId)) continue
       const value =
@@ -505,6 +509,7 @@ function bestDestroyerResolution(view: BotView, botUserId: string): Candidate {
 
   let bestChoice: { ownerId: string; priority: string[]; score: number } | null = null
   for (const { ownerId, force } of livingOpponents(view, botUserId)) {
+    if (force.smoke_active) continue // a smoked fleet would just waste the mandatory attack
     // Priority: targetable ships, highest hit points first (bank the most points).
     const priority = force.ships
       .filter((s) => engine.isTargetable(force, s.shipId))

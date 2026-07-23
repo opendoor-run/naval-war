@@ -155,10 +155,14 @@ async function handleDraw(ctx: GameContext, callerId: string) {
 
 function hasAnyLegalTarget(ctx: GameContext, callerId: string, type: string): boolean {
   const opponents = ctx.players.filter((p) => p.user_id !== callerId && !p.is_eliminated_this_round)
-  if (type === 'minefield') return opponents.length > 0
+  // Smoke blocks everything except Submarines and Additional Damage.
+  if (type === 'minefield') {
+    return opponents.some((o) => !requireForce(ctx, o.user_id).smoke_active)
+  }
   if (type === 'submarine' || type === 'torpedo_boat') {
     return opponents.some((o) => {
       const force = requireForce(ctx, o.user_id)
+      if (type === 'torpedo_boat' && force.smoke_active) return false
       return force.ships.some((s) => engine.isTargetable(force, s.shipId))
     })
   }
@@ -331,6 +335,7 @@ function applyCardEffect(ctx: GameContext, callerId: string, cardId: string, pay
     }
     case 'minefield': {
       const force = opponentForce(ctx, callerId, target.targetOwnerId)
+      if (force.smoke_active) throw new HttpError(400, 'That fleet is hidden by smoke')
       const sunkIds = engine.placeMinefield(force, cardId, callerId, ctx.taskForces)
       markForceDirty(ctx, target.targetOwnerId!)
       if (sunkIds.length > 0) markForceDirty(ctx, callerId)
@@ -347,6 +352,10 @@ function applyCardEffect(ctx: GameContext, callerId: string, cardId: string, pay
     case 'torpedo_boat': {
       const force = opponentForce(ctx, callerId, target.targetOwnerId)
       if (!target.targetShipId) throw new HttpError(400, 'targetShipId is required')
+      // Smoke blocks everything except Submarines and Additional Damage.
+      if (card.type === 'torpedo_boat' && force.smoke_active) {
+        throw new HttpError(400, 'That fleet is hidden by smoke')
+      }
       if (!engine.isTargetable(force, target.targetShipId)) {
         throw new HttpError(400, 'That ship cannot be targeted right now')
       }
@@ -545,6 +554,10 @@ async function handleAirstrike(ctx: GameContext, callerId: string, payload: Game
 
   for (const s of strikes) {
     const force = opponentForce(ctx, callerId, s.targetOwnerId)
+    if (force.smoke_active) {
+      log(ctx, seat, `${nameOf(ctx, callerId)}'s airstrike on ${shipName(s.targetShipId)} is blocked by smoke - skipped.`)
+      continue
+    }
     if (!engine.isTargetable(force, s.targetShipId)) {
       log(ctx, seat, `${nameOf(ctx, callerId)}'s airstrike on ${shipName(s.targetShipId)} has no valid target - skipped.`)
       continue
@@ -582,7 +595,12 @@ async function handleResolveDestroyer(ctx: GameContext, callerId: string, payloa
 
   const force = opponentForce(ctx, callerId, resolution.targetOwnerId)
   const roll = engine.rollDie()
-  const sunk = engine.resolveDestroyerAttack(force, resolution.priorityShipIds, roll, callerId, ctx.taskForces)
+  // The attack is mandatory even if the chosen fleet turns out to be smoked - it just
+  // has no effect, same as any other action smoke blocks (only Submarines and
+  // Additional Damage get through it).
+  const sunk = force.smoke_active
+    ? []
+    : engine.resolveDestroyerAttack(force, resolution.priorityShipIds, roll, callerId, ctx.taskForces)
   markForceDirty(ctx, resolution.targetOwnerId)
   if (sunk.length > 0) markForceDirty(ctx, callerId)
 

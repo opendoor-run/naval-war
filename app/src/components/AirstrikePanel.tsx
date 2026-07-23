@@ -24,7 +24,10 @@ export function AirstrikePanel({
   busy: boolean
 }) {
   const carriers = myForce.ships.filter((s) => !s.sunk && getShip(s.shipId).isCarrier)
-  const opponents = players.filter((p) => p.user_id !== myUserId && !p.is_eliminated_this_round)
+  // Smoke blocks airstrikes.
+  const opponents = players.filter(
+    (p) => p.user_id !== myUserId && !p.is_eliminated_this_round && !taskForces[p.user_id]?.smoke_active
+  )
   const [assignments, setAssignments] = useState<Record<string, { ownerId: string; shipId: string }>>({})
 
   function setOwner(carrierShipId: string, ownerId: string) {
