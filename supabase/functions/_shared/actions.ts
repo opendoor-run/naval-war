@@ -122,14 +122,6 @@ async function handleDraw(ctx: GameContext, callerId: string) {
 
   const card = getPlayCard(cardId)
 
-  if (card.type === 'additional_ship') {
-    game.discard_pile = [...game.discard_pile, cardId]
-    resolveAdditionalShip(ctx, callerId)
-    log(ctx, seat, `${nameOf(ctx, callerId)} drew and played Additional Ship.`)
-    await finishTurnAction(ctx)
-    return { drawnCard: cardId, resolved: true }
-  }
-
   if (IMMEDIATE_PLAY_TYPES.has(card.type)) {
     const legal = hasAnyLegalTarget(ctx, callerId, card.type)
     if (!legal) {

@@ -676,6 +676,9 @@ function chooseNormalTurnAction(
 /** Pick the best target for a just-drawn immediate special that must be resolved. */
 function resolvePendingCard(view: BotView, botUserId: string, cardId: string): GameActionPayload {
   const type = getPlayCard(cardId).type
+  // Additional Ship has no target to choose - it's always just a confirm.
+  if (type === 'additional_ship') return { gameId: view.game.id, type: 'play', cardId, target: {} }
+
   let cands: Candidate[] = []
   if (type === 'minefield') cands = minefieldCandidates(view, botUserId, cardId, false)
   else if (type === 'submarine') cands = rollAttackCandidates(view, botUserId, cardId, 'submarine')
