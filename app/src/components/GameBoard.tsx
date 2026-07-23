@@ -224,7 +224,7 @@ export function GameBoard({
           <div className="ptc-panel ptc-clipboard ptc-rivets p-3">
             <div className="mb-2 flex items-center justify-between">
               <p className="ptc-headline text-sm">
-                {isMySpecialTurn ? 'Your Setup Turn' : isMyNormalTurn ? 'Your Turn' : 'Your Hand'}
+                {isMySpecialTurn ? 'Your Setup Turn' : 'Your Hand'}
               </p>
               {isMySpecialTurn && (
                 <button
@@ -263,6 +263,7 @@ export function GameBoard({
             </div>
             <Hand
               cards={myHand?.cards ?? []}
+              myForce={myForce}
               selectedCardId={selectedCardId}
               onSelect={setSelectedCardId}
               specialPhaseMode={isMySpecialTurn}

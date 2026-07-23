@@ -39,12 +39,14 @@ export function CardImage({
   cardId,
   selected,
   dim,
+  dimSlight,
   size = 'md',
   onClick,
 }: {
   cardId: string
   selected?: boolean
   dim?: boolean
+  dimSlight?: boolean
   size?: 'sm' | 'md' | 'lg'
   onClick?: () => void
 }) {
@@ -59,6 +61,7 @@ export function CardImage({
           border-[var(--navy-deep)] bg-[var(--parchment)]
           ${selected ? '-translate-y-2 shadow-[3px_3px_0_var(--amber)]' : 'shadow-[1px_1px_0_rgba(21,39,56,0.2)]'}
           ${dim ? 'opacity-40' : 'hover:-translate-y-1'}
+          ${!dim && dimSlight ? 'opacity-70' : ''}
           ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
         style={{ aspectRatio: '5 / 3' }}
       >
