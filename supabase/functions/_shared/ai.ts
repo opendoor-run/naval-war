@@ -615,15 +615,30 @@ function chooseNormalTurnAction(
     return resolvePendingCard(view, botUserId, view.game.pending_drawn_card)
   }
 
+  // 4 (computed early). Every legal terminal play from the current hand — needed
+  // both as the eventual fallback and, below, to weigh against an airstrike:
+  // drawing doesn't cost the chance to play the best of these, since you draw
+  // AND still get to play after, so a strong card already in hand should make
+  // the bot draw (and then fire it) rather than airstrike it away unused.
+  const cands: Candidate[] = []
+  cands.push(...salvoCandidates(view, botUserId, hand))
+  cands.push(...repairCandidates(view, botUserId, hand))
+  cands.push(...minesweeperCandidates(view, botUserId, hand))
+  cands.push(...smokeCandidates(view, botUserId, hand))
+  cands.push(...deploySquadronCandidates(view, botUserId, hand))
+  const bestHandPlay = best(cands)
+
   // 3. Fresh turn (haven't drawn yet): an airstrike is the only alternative to
-  //    drawing ("instead of drawing, ... launch airstrikes"). Drawing dominates
-  //    playing a hand card, since you draw a card AND still get to play after.
-  //    Airstrike is NOT a post-draw option — that would be two actions in one turn.
+  //    drawing ("instead of drawing, ... launch airstrikes"). Airstrike is NOT
+  //    a post-draw option — that would be two actions in one turn — so it must
+  //    beat not just the value of a fresh draw but the value of drawing-then-
+  //    playing the best card already in hand.
   const drawPossible = view.game.draw_pile.length > 0
   if (!hasDrawnThisTurn) {
     const airstrike = bestAirstrike(view, botUserId)
+    const drawValue = WEIGHTS.drawBaseline + Math.max(0, bestHandPlay?.score ?? 0)
     if (drawPossible) {
-      if (airstrike && airstrike.score > WEIGHTS.drawBaseline) return airstrike.payload
+      if (airstrike && airstrike.score > drawValue) return airstrike.payload
       return { gameId, type: 'draw' }
     }
     // Draw pile empty on a fresh turn (rare — the round usually ends first):
@@ -631,16 +646,9 @@ function chooseNormalTurnAction(
     if (airstrike && airstrike.score > 0) return airstrike.payload
   }
 
-  // 4. Turn must end with a play or discard. Enumerate every legal terminal
-  //    play (from hand) plus the discard fallback, and take the best.
-  const cands: Candidate[] = []
-  cands.push(...salvoCandidates(view, botUserId, hand))
-  cands.push(...repairCandidates(view, botUserId, hand))
-  cands.push(...minesweeperCandidates(view, botUserId, hand))
-  cands.push(...smokeCandidates(view, botUserId, hand))
-  cands.push(...deploySquadronCandidates(view, botUserId, hand))
+  // Turn must end with a play or discard - take the best of the hand plays
+  // computed above, plus the discard fallback.
   cands.push(discardFallback(view, botUserId, hand))
-
   return (best(cands) as Candidate).payload
 }
 
