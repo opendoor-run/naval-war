@@ -5,7 +5,7 @@ import { chooseBotAction } from '../_shared/ai.ts'
 import type { GameActionPayload } from '../_shared/types.ts'
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2'
 
-const BOT_DECISION_DELAY_MS = 1250
+const BOT_DECISION_DELAY_MS = 1000
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
