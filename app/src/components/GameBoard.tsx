@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getShip } from '../lib/cards'
+import { CardImage } from './CardImage'
 import { Hand } from './Hand'
 import { TaskForceView } from './TaskForceView'
 import { TurnTracker } from './TurnTracker'
@@ -241,12 +242,20 @@ export function GameBoard({
           <ScorePanel game={game} players={players} myUserId={myUserId} />
           {destroyerSquadrons.length > 0 && (
             <div className="ptc-panel ptc-clipboard ptc-rivets p-3 text-sm">
-              <p className="ptc-headline mb-1 text-sm">Destroyer Squadrons</p>
-              {destroyerSquadrons.map((s) => (
-                <p key={s.id} className="ptc-mono text-[var(--ink-soft)]">
-                  {players.find((p) => p.user_id === s.owner_id)?.display_name}: {s.hits_taken}/4 hits
-                </p>
-              ))}
+              <p className="ptc-headline mb-2 text-sm">Destroyer Squadrons</p>
+              <div className="flex flex-wrap gap-3">
+                {destroyerSquadrons.map((s) => (
+                  <div key={s.id} className="group relative">
+                    <CardImage cardId={s.card_id} size="sm" />
+                    <div className="ptc-mono absolute -bottom-1 -right-1 border border-[var(--navy-deep)] bg-[var(--amber)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--navy-deep)]">
+                      {s.hits_taken}/4
+                    </div>
+                    <p className="ptc-mono mt-1 text-[10px] text-[var(--ink-soft)]">
+                      {players.find((p) => p.user_id === s.owner_id)?.display_name}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           <div className="h-64">
