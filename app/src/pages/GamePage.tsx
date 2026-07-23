@@ -38,9 +38,15 @@ export default function GamePage() {
   return (
     <>
       {game.status === 'lobby' ? (
-        <Lobby game={game} players={players} isHost={game.host_id === user.id} />
+        <>
+          <Lobby game={game} players={players} isHost={game.host_id === user.id} />
+          <ChatPanel messages={messages} players={players} myUserId={user.id} onSend={sendMessage} sending={sending} />
+        </>
       ) : game.status === 'finished' ? (
-        <GameOverScreen game={game} players={players} />
+        <>
+          <GameOverScreen game={game} players={players} />
+          <ChatPanel messages={messages} players={players} myUserId={user.id} onSend={sendMessage} sending={sending} />
+        </>
       ) : (
         <GameBoard
           game={game}
@@ -51,9 +57,11 @@ export default function GamePage() {
           destroyerSquadrons={destroyerSquadrons}
           log={log}
           dispatch={gameAction}
+          chatMessages={messages}
+          onSendChat={sendMessage}
+          chatSending={sending}
         />
       )}
-      <ChatPanel messages={messages} players={players} myUserId={user.id} onSend={sendMessage} sending={sending} />
     </>
   )
 }

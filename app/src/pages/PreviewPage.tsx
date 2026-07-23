@@ -162,7 +162,10 @@ export default function PreviewPage() {
       {showInstructions && <InstructionsModal onClose={() => setShowInstructions(false)} />}
 
       {view === 'lobby' ? (
-        <Lobby game={mockGameLobby} players={mockPlayers} isHost />
+        <>
+          <Lobby game={mockGameLobby} players={mockPlayers} isHost />
+          <ChatPanel messages={chat} players={mockPlayers} myUserId={ME} onSend={mockSendMessage} sending={false} />
+        </>
       ) : (
         <GameBoard
           game={mockGameBoard}
@@ -173,9 +176,11 @@ export default function PreviewPage() {
           destroyerSquadrons={mockDestroyerSquadrons}
           log={mockLog}
           dispatch={mockDispatch}
+          chatMessages={chat}
+          onSendChat={mockSendMessage}
+          chatSending={false}
         />
       )}
-      <ChatPanel messages={chat} players={mockPlayers} myUserId={ME} onSend={mockSendMessage} sending={false} />
     </div>
   )
 }

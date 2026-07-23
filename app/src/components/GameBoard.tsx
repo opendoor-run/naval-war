@@ -10,9 +10,11 @@ import { ActionPanel } from './ActionPanel'
 import { AirstrikePanel } from './AirstrikePanel'
 import { DestroyerResolvePanel } from './DestroyerResolvePanel'
 import { AppHeader } from './AppHeader'
+import { ChatPanel } from './ChatPanel'
 import type {
   ActionTarget,
   AirstrikeDeclaration,
+  ChatMessageRow,
   DestroyerSquadronRow,
   GameActionPayload,
   GameLogRow,
@@ -65,6 +67,9 @@ export function GameBoard({
   destroyerSquadrons,
   log,
   dispatch,
+  chatMessages,
+  onSendChat,
+  chatSending,
 }: {
   game: GameRow
   players: GamePlayerRow[]
@@ -74,6 +79,9 @@ export function GameBoard({
   destroyerSquadrons: DestroyerSquadronRow[]
   log: GameLogRow[]
   dispatch: (payload: GameActionPayload) => Promise<unknown>
+  chatMessages: ChatMessageRow[]
+  onSendChat: (text: string) => Promise<void>
+  chatSending: boolean
 }) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
   const [mode, setMode] = useState<'idle' | 'airstrike'>('idle')
@@ -273,13 +281,10 @@ export function GameBoard({
               interactive={isMyNormalTurn || isMySpecialTurn}
             />
           </div>
-
-          {/* Kept in the left column, away from the Radio chat panel fixed to the bottom-right. */}
-          <div className="h-64">
-            <GameLog log={log} />
-          </div>
         </div>
 
+        {/* Round info, Radio Log, and Radio chat all stack in one flow here, so
+            each one growing or shrinking pushes the others rather than overlapping. */}
         <div className="space-y-4">
           <ScorePanel game={game} players={players} myUserId={myUserId} />
           {destroyerSquadrons.length > 0 && (
@@ -296,6 +301,17 @@ export function GameBoard({
               </div>
             </div>
           )}
+          <div className="h-64">
+            <GameLog log={log} />
+          </div>
+          <ChatPanel
+            messages={chatMessages}
+            players={players}
+            myUserId={myUserId}
+            onSend={onSendChat}
+            sending={chatSending}
+            className=""
+          />
         </div>
       </div>
     </div>

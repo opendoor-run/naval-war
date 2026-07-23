@@ -7,12 +7,17 @@ export function ChatPanel({
   myUserId,
   onSend,
   sending,
+  className = 'fixed bottom-4 right-4 z-40 w-72 max-w-[calc(100vw-2rem)]',
 }: {
   messages: ChatMessageRow[]
   players: GamePlayerRow[]
   myUserId: string
   onSend: (text: string) => Promise<void>
   sending: boolean
+  /** Positioning wrapper classes - defaults to a fixed bottom-right overlay (Lobby, Game Over).
+      Pass '' when embedding in a normal flex/grid layout (in-game sidebar) so it reflows with
+      its siblings instead of floating independently. */
+  className?: string
 }) {
   const [open, setOpen] = useState(true)
   const [draft, setDraft] = useState('')
@@ -35,7 +40,7 @@ export function ChatPanel({
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 w-72 max-w-[calc(100vw-2rem)]">
+    <div className={className}>
       <div className="ptc-panel overflow-hidden">
         <button onClick={() => setOpen((o) => !o)} className="ptc-headline flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-[var(--parchment-lo)]/40">
           <span>Radio</span>
