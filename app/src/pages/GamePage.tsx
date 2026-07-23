@@ -5,6 +5,7 @@ import { useChatMessages } from '../hooks/useChatMessages'
 import { gameAction } from '../lib/api'
 import { Lobby } from '../components/Lobby'
 import { GameBoard } from '../components/GameBoard'
+import { GameOverScreen } from '../components/GameOverScreen'
 import { ChatPanel } from '../components/ChatPanel'
 import { AppHeader } from '../components/AppHeader'
 
@@ -38,6 +39,8 @@ export default function GamePage() {
     <>
       {game.status === 'lobby' ? (
         <Lobby game={game} players={players} isHost={game.host_id === user.id} />
+      ) : game.status === 'finished' ? (
+        <GameOverScreen game={game} players={players} />
       ) : (
         <GameBoard
           game={game}

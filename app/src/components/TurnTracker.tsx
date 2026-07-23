@@ -1,7 +1,6 @@
 import type { DestroyerSquadronRow, GamePlayerRow, GameRow } from '../types/game'
 
 function phaseLabel(game: GameRow, activePlayer: GamePlayerRow | undefined, destroyerSquadrons: DestroyerSquadronRow[]): string | null {
-  if (game.status === 'finished') return 'Game Over'
   if (game.status === 'special_phase') return 'Setup Phase'
   if (game.status === 'in_progress') {
     const activeSquadron = activePlayer && destroyerSquadrons.some((s) => s.owner_id === activePlayer.user_id)

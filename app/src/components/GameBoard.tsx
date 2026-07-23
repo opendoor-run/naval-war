@@ -95,9 +95,6 @@ export function GameBoard({
             <span>Draw pile: {game.draw_pile.length}</span>
             <span>Discard: {game.discard_pile.length}</span>
             <span>Harbor: {game.harbor_pile.length}</span>
-            {game.status === 'finished' && (
-              <span className="ptc-stamp px-2 py-0.5 text-xs">Game Over</span>
-            )}
           </div>
 
           {/* Opponent fleets */}
