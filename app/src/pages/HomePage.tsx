@@ -179,13 +179,15 @@ export default function HomePage() {
           ) : (
             <ul className="space-y-2">
               {myGames.map((g) => {
-                const canDelete = g.host_id === user.id && g.status === 'lobby'
+                const canDelete = g.host_id === user.id
                 return (
                   <li key={g.game_id}>
                     {confirmingDeleteId === g.game_id ? (
                       <div className="border-2 border-[var(--red)] bg-[var(--parchment-hi)] p-2 text-center">
                         <p className="ptc-mono mb-2 text-xs" style={{ color: 'var(--red)' }}>
-                          Delete this game for everyone? This can't be undone.
+                          {g.status === 'lobby'
+                            ? "Delete this game for everyone? This can't be undone."
+                            : "Delete this in-progress game for everyone? All players will lose their progress. This can't be undone."}
                         </p>
                         <div className="flex justify-center gap-2">
                           <button

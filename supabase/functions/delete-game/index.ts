@@ -12,15 +12,12 @@ Deno.serve(async (req) => {
 
     const { data: game, error: gameErr } = await db
       .from('games')
-      .select('id, host_id, status')
+      .select('id, host_id')
       .eq('id', gameId)
       .maybeSingle()
     if (gameErr) throw gameErr
     if (!game) throw new HttpError(404, 'Game not found')
     if (game.host_id !== callerId) throw new HttpError(403, 'Only the host can delete this game')
-    if (game.status !== 'lobby') {
-      throw new HttpError(400, 'Only games still in the lobby can be deleted')
-    }
 
     // All related rows (players, hands, task forces, log, chat) cascade off this delete.
     const { error: deleteErr } = await db.from('games').delete().eq('id', gameId)
