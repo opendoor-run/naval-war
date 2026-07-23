@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { startGame, deleteGame, gameAction } from '../lib/api'
 import { AppHeader } from './AppHeader'
+import { InstructionsModal } from './InstructionsModal'
 import type { GameRow, GamePlayerRow } from '../types/game'
 
 export function Lobby({
@@ -18,6 +19,7 @@ export function Lobby({
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [showRules, setShowRules] = useState(false)
 
   const inviteUrl = `${window.location.origin}/join/${game.invite_token}`
 
@@ -69,7 +71,10 @@ export function Lobby({
       <div className="mx-auto max-w-lg px-4 py-12">
         <h1 className="ptc-display text-3xl">Lobby</h1>
         <p className="ptc-mono mb-6 mt-1 text-sm text-[var(--ink-soft)]">
-          Target score {game.target_score} · up to {game.max_players} players
+          Target score {game.target_score} · up to {game.max_players} players ·{' '}
+          <button onClick={() => setShowRules(true)} className="underline hover:opacity-70">
+            Rules
+          </button>
         </p>
 
         <div className="ptc-panel ptc-clipboard ptc-rivets mb-6 p-5">
@@ -155,6 +160,7 @@ export function Lobby({
           <p className="ptc-mono text-center text-sm text-[var(--ink-soft)]">Waiting for the host to start the game...</p>
         )}
       </div>
+      {showRules && <InstructionsModal onClose={() => setShowRules(false)} />}
     </div>
   )
 }
