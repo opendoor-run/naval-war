@@ -15,6 +15,7 @@ export interface GameRow {
   discard_pile: string[]
   harbor_pile: string[]
   pending_drawn_card: string | null
+  drawn_this_turn: boolean
   version: number
 }
 

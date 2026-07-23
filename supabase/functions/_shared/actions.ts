@@ -112,10 +112,12 @@ async function handleDraw(ctx: GameContext, callerId: string) {
   if (ctx.destroyerSquadrons.some((s) => s.owner_id === callerId)) {
     throw new HttpError(400, 'Resolve your Destroyer Squadron attack first')
   }
+  if (game.drawn_this_turn) throw new HttpError(400, 'You have already drawn this turn')
   if (game.draw_pile.length === 0) throw new HttpError(400, 'The draw pile is empty')
 
   const [cardId, ...rest] = game.draw_pile
   game.draw_pile = rest
+  game.drawn_this_turn = true
   markGameDirty(ctx)
 
   const card = getPlayCard(cardId)
@@ -500,6 +502,7 @@ async function handlePassSpecial(ctx: GameContext, callerId: string) {
     game.status = 'in_progress'
     game.turn_seat = game.dealer_seat
     game.special_phase_seat = null
+    game.drawn_this_turn = false
     log(ctx, game.dealer_seat, `Setup complete. ${nameOf(ctx, dealerUserId(ctx))} takes the first turn.`)
   } else {
     game.special_phase_seat = next
@@ -525,6 +528,9 @@ async function handleAirstrike(ctx: GameContext, callerId: string, payload: Game
   if (game.turn_seat !== seat) throw new HttpError(403, "It's not your turn")
   if (ctx.destroyerSquadrons.some((s) => s.owner_id === callerId)) {
     throw new HttpError(400, 'Resolve your Destroyer Squadron attack first')
+  }
+  if (game.drawn_this_turn) {
+    throw new HttpError(400, 'You already drew this turn - airstrikes replace your draw, not follow it')
   }
   const strikes = payload.strikes ?? []
   if (strikes.length === 0) throw new HttpError(400, 'Declare at least one strike')
@@ -626,6 +632,7 @@ async function finishTurnAction(ctx: GameContext) {
   const seat = seatOf(ctx, currentTurnUserId(ctx))
   const next = engine.nextSeat(ctx.players, seat, true)
   game.turn_seat = next
+  game.drawn_this_turn = false
   markGameDirty(ctx)
 
   // Smoke lasts until the owner's next turn, discarded just before it starts.
@@ -708,6 +715,7 @@ async function endRound(ctx: GameContext) {
   game.harbor_pile = dealt.harborPile
   game.discard_pile = []
   game.pending_drawn_card = null
+  game.drawn_this_turn = false
   markGameDirty(ctx)
   log(ctx, newDealer.seat_index, `Round ${game.current_round} begins. ${newDealer.display_name} deals.`)
 

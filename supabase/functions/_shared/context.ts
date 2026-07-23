@@ -187,6 +187,7 @@ function gameUpdatePayload(game: GameRow) {
     discard_pile: game.discard_pile,
     harbor_pile: game.harbor_pile,
     pending_drawn_card: game.pending_drawn_card,
+    drawn_this_turn: game.drawn_this_turn,
     target_score: game.target_score,
   }
 }

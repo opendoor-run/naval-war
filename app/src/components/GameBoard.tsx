@@ -237,7 +237,8 @@ export function GameBoard({
               )}
               {isMyNormalTurn && !hasPendingDrawn && !mustResolveSquadron && (
                 <div className="flex gap-2">
-                  {myForce?.ships.some((s) => !s.sunk && getShip(s.shipId).isCarrier) && (
+                  {/* Airstrike replaces drawing, not follow it - hide once this turn's card is drawn. */}
+                  {!game.drawn_this_turn && myForce?.ships.some((s) => !s.sunk && getShip(s.shipId).isCarrier) && (
                     <button disabled={busy} onClick={() => setMode('airstrike')} className="ptc-btn px-3 py-1 text-xs">
                       Airstrike
                     </button>
@@ -251,13 +252,15 @@ export function GameBoard({
                       Discard Selected
                     </button>
                   )}
-                  <button
-                    disabled={busy}
-                    onClick={() => run(() => dispatch({ gameId: game.id, type: 'draw' }))}
-                    className="ptc-btn ptc-btn-primary px-3 py-1 text-xs"
-                  >
-                    Draw
-                  </button>
+                  {!game.drawn_this_turn && (
+                    <button
+                      disabled={busy}
+                      onClick={() => run(() => dispatch({ gameId: game.id, type: 'draw' }))}
+                      className="ptc-btn ptc-btn-primary px-3 py-1 text-xs"
+                    >
+                      Draw
+                    </button>
+                  )}
                 </div>
               )}
             </div>

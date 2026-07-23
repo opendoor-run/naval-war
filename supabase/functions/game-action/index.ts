@@ -14,7 +14,6 @@ function sleep(ms: number) {
 /** After a human action resolves, play out any consecutive bot turns that follow, one action at a time,
     pausing between each so bot moves are readable rather than instant. */
 async function runBotTurns(db: SupabaseClient, gameId: string) {
-  let turnState: { seat: number; hasDrawn: boolean } | null = null
   // Generous but finite guard against an unexpected infinite loop in ai.ts.
   for (let i = 0; i < 200; i++) {
     const ctx = await loadContext(db, gameId)
@@ -24,13 +23,11 @@ async function runBotTurns(db: SupabaseClient, gameId: string) {
     const player = ctx.players.find((p) => p.seat_index === seat)
     if (!player || !player.is_bot || player.is_eliminated_this_round) return
 
-    if (!turnState || turnState.seat !== seat) turnState = { seat, hasDrawn: false }
-    const action = chooseBotAction(ctx, player.user_id, turnState.hasDrawn)
+    const action = chooseBotAction(ctx, player.user_id, g.drawn_this_turn)
     if (!action) return
 
     await sleep(BOT_DECISION_DELAY_MS)
-    const result = (await dispatchAction(ctx, player.user_id, action)) as { resolved?: boolean }
-    turnState = action.type === 'draw' && result.resolved === false ? { seat, hasDrawn: true } : null
+    await dispatchAction(ctx, player.user_id, action)
   }
 }
 

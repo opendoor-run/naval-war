@@ -40,6 +40,7 @@ const mockGameBoard: GameRow = {
   discard_pile: new Array(11).fill('x'),
   harbor_pile: new Array(19).fill('x'),
   pending_drawn_card: null,
+  drawn_this_turn: false,
   version: 1,
 }
 
