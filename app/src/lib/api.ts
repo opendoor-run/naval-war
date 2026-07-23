@@ -1,22 +1,35 @@
 import { supabase } from './supabase'
 import type { GameActionPayload } from '../types/game'
 
+const INVOKE_TIMEOUT_MS = 15_000
+
 async function invoke<T>(fn: string, body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke(fn, { body })
-  if (error) {
-    let message = error.message
-    try {
-      const ctx = (error as unknown as { context?: Response }).context
-      if (ctx) {
-        const json = await ctx.clone().json()
-        if (json?.error) message = json.error
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), INVOKE_TIMEOUT_MS)
+  try {
+    const { data, error } = await supabase.functions.invoke(fn, { body, signal: controller.signal })
+    if (error) {
+      let message = error.message
+      try {
+        const ctx = (error as unknown as { context?: Response }).context
+        if (ctx) {
+          const json = await ctx.clone().json()
+          if (json?.error) message = json.error
+        }
+      } catch {
+        // ignore, fall back to default message
       }
-    } catch {
-      // ignore, fall back to default message
+      throw new Error(message)
     }
-    throw new Error(message)
+    return data as T
+  } catch (e) {
+    if (controller.signal.aborted) {
+      throw new Error('Request timed out - check your connection and try again.')
+    }
+    throw e
+  } finally {
+    clearTimeout(timeout)
   }
-  return data as T
 }
 
 export function createGame(input: { displayName: string; targetScore: number; maxPlayers: number }) {

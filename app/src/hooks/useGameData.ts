@@ -94,12 +94,24 @@ export function useGameData(gameId: string | undefined, userId: string | undefin
           setLog((prev) => [...prev, payload.new as GameLogRow].slice(-50))
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        // Postgres changes missed while the socket was down (tab backgrounded, network
+        // blip) never arrive after reconnect - resync from scratch once we're back.
+        if (status === 'SUBSCRIBED') reloadAll()
+      })
 
     return () => {
       supabase.removeChannel(channel)
     }
   }, [gameId, userId, reloadAll])
+
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === 'visible') reloadAll()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [reloadAll])
 
   return { game, players, myHand, taskForces, destroyerSquadrons, log, loading }
 }
