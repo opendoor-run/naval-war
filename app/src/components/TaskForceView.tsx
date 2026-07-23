@@ -26,9 +26,10 @@ export function TaskForceView({
 
   return (
     <div
-      className="ptc-panel ptc-rivets p-3"
+      className="ptc-panel ptc-rivets relative overflow-hidden p-3"
       style={isMine ? { borderLeft: '4px solid var(--amber)' } : undefined}
     >
+      {force.smoke_active && <div className="ptc-smoke-overlay" />}
       <div className="mb-2 flex items-center gap-2">
         <span className="ptc-headline text-base">{ownerName}</span>
         {isMine && <span className="ptc-stamp px-1.5 py-0.5 text-[10px]">You</span>}

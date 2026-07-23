@@ -264,3 +264,26 @@ body {
   outline: none;
   border-bottom-color: var(--red);
 }
+
+/* ── Smoke screen overlay (fleet view, fades in when a Smoke card is played) ── */
+@keyframes ptc-smoke-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.ptc-smoke-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(215, 215, 208, 0.78),
+    rgba(180, 180, 172, 0.62) 55%,
+    rgba(150, 150, 142, 0.45) 100%
+  );
+  animation: ptc-smoke-fade-in 900ms ease-out;
+}
