@@ -45,9 +45,12 @@ export function GameBoard({
   const [mode, setMode] = useState<'idle' | 'airstrike'>('idle')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // A squadron we've already resolved but that Realtime hasn't confirmed deleted yet -
+  // without this the panel stays up during that gap and a second click 400s.
+  const [resolvedSquadronId, setResolvedSquadronId] = useState<string | null>(null)
 
   const myPlayer = players.find((p) => p.user_id === myUserId)
-  const mySquadron = destroyerSquadrons.find((s) => s.owner_id === myUserId)
+  const mySquadron = destroyerSquadrons.find((s) => s.owner_id === myUserId && s.id !== resolvedSquadronId)
   const myForce = taskForces[myUserId]
 
   const isMyNormalTurn = game.status === 'in_progress' && game.turn_seat === myPlayer?.seat_index
@@ -122,15 +125,17 @@ export function GameBoard({
               players={players}
               taskForces={taskForces}
               busy={busy}
-              onConfirm={(targetOwnerId, priorityShipIds) =>
-                run(() =>
-                  dispatch({
+              onConfirm={(targetOwnerId, priorityShipIds) => {
+                const squadronId = mySquadron!.id
+                run(async () => {
+                  await dispatch({
                     gameId: game.id,
                     type: 'resolve_destroyer',
                     destroyerResolution: { targetOwnerId, priorityShipIds },
                   })
-                )
-              }
+                  setResolvedSquadronId(squadronId)
+                })
+              }}
             />
           )}
 
