@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getShip } from '../lib/cards'
 import { CardImage } from './CardImage'
 import { Hand } from './Hand'
@@ -21,6 +21,39 @@ import type {
   HandRow,
   TaskForceRow,
 } from '../types/game'
+
+const SQUADRON_HIT_EXPLOSION_MS = 650
+const SQUADRON_DESTROY_EXPLOSION_MS = SQUADRON_HIT_EXPLOSION_MS * 2
+
+/** A Destroyer Squadron's card, flashing an explosion whenever it takes a hit (longer if that hit destroys it). */
+function DestroyerSquadronCard({ squadron, ownerName }: { squadron: DestroyerSquadronRow; ownerName: string | undefined }) {
+  const prevHits = useRef(squadron.hits_taken)
+  const [explosionMs, setExplosionMs] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (squadron.hits_taken > prevHits.current) {
+      setExplosionMs(squadron.hits_taken >= 4 ? SQUADRON_DESTROY_EXPLOSION_MS : SQUADRON_HIT_EXPLOSION_MS)
+    }
+    prevHits.current = squadron.hits_taken
+  }, [squadron.hits_taken])
+
+  useEffect(() => {
+    if (explosionMs === null) return
+    const t = setTimeout(() => setExplosionMs(null), explosionMs)
+    return () => clearTimeout(t)
+  }, [explosionMs])
+
+  return (
+    <div className="group relative">
+      <CardImage cardId={squadron.card_id} size="sm" />
+      <div className="ptc-mono absolute -bottom-1 -right-1 border border-[var(--navy-deep)] bg-[var(--amber)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--navy-deep)]">
+        {squadron.hits_taken}/4
+      </div>
+      {explosionMs !== null && <div className="ptc-explosion-overlay" style={{ animationDuration: `${explosionMs}ms` }} />}
+      <p className="ptc-mono mt-1 text-[10px] text-[var(--ink-soft)]">{ownerName}</p>
+    </div>
+  )
+}
 
 /** Pure presentational board - fed real data + a dispatch function by GamePage, or mock data by PreviewPage. */
 export function GameBoard({
@@ -245,15 +278,11 @@ export function GameBoard({
               <p className="ptc-headline mb-2 text-sm">Destroyer Squadrons</p>
               <div className="flex flex-wrap gap-3">
                 {destroyerSquadrons.map((s) => (
-                  <div key={s.id} className="group relative">
-                    <CardImage cardId={s.card_id} size="sm" />
-                    <div className="ptc-mono absolute -bottom-1 -right-1 border border-[var(--navy-deep)] bg-[var(--amber)] px-1.5 py-0.5 text-[10px] font-bold text-[var(--navy-deep)]">
-                      {s.hits_taken}/4
-                    </div>
-                    <p className="ptc-mono mt-1 text-[10px] text-[var(--ink-soft)]">
-                      {players.find((p) => p.user_id === s.owner_id)?.display_name}
-                    </p>
-                  </div>
+                  <DestroyerSquadronCard
+                    key={s.id}
+                    squadron={s}
+                    ownerName={players.find((p) => p.user_id === s.owner_id)?.display_name}
+                  />
                 ))}
               </div>
             </div>
