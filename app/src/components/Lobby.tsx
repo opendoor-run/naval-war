@@ -99,7 +99,7 @@ export function Lobby({
               >
                 <span className="text-[var(--ink-soft)]">#{p.seat_index + 1}</span>
                 <span>{p.display_name}</span>
-                {p.is_bot && <span className="ptc-stamp ml-auto px-1.5 py-0.5 text-[10px]">AI</span>}
+                {p.is_bot && <span className="ptc-stamp ml-auto px-1.5 py-0.5 text-[10px]">CPU</span>}
                 {p.user_id === game.host_id && <span className="ptc-stamp px-1.5 py-0.5 text-[10px]">Host</span>}
               </li>
             ))}
