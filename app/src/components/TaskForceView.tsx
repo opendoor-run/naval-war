@@ -4,9 +4,12 @@ import { CardImage } from './CardImage'
 import { ShipTooltip } from './ShipTooltip'
 import type { GamePlayerRow, ShipState, TaskForceRow } from '../types/game'
 
-const EXPLOSION_DURATION_MS = 650
+const HIT_EXPLOSION_MS = 650
+const SINK_EXPLOSION_MS = HIT_EXPLOSION_MS * 2
 
-/** A live ship card that briefly flashes an explosion overlay whenever its damage increases. */
+/** One ship's card, alive or sunk. Kept as a single component across that transition (rather
+    than two separate alive/sunk render paths) so its explosion-tracking refs survive the sink
+    moment instead of remounting - a hit flashes a short burst, a sink flashes twice as long. */
 function ShipCard({
   ship,
   hitPoints,
@@ -21,17 +24,40 @@ function ShipCard({
   players: GamePlayerRow[]
 }) {
   const prevDamage = useRef(ship.damage)
-  const [exploding, setExploding] = useState(false)
+  const prevSunk = useRef(ship.sunk)
+  const [explosionMs, setExplosionMs] = useState<number | null>(null)
 
   useEffect(() => {
-    if (ship.damage > prevDamage.current) {
-      setExploding(true)
-      const t = setTimeout(() => setExploding(false), EXPLOSION_DURATION_MS)
-      prevDamage.current = ship.damage
-      return () => clearTimeout(t)
-    }
+    const justSunk = ship.sunk && !prevSunk.current
+    const tookDamage = !ship.sunk && ship.damage > prevDamage.current
+    if (justSunk) setExplosionMs(SINK_EXPLOSION_MS)
+    else if (tookDamage) setExplosionMs(HIT_EXPLOSION_MS)
     prevDamage.current = ship.damage
-  }, [ship.damage])
+    prevSunk.current = ship.sunk
+  }, [ship.damage, ship.sunk])
+
+  useEffect(() => {
+    if (explosionMs === null) return
+    const t = setTimeout(() => setExplosionMs(null), explosionMs)
+    return () => clearTimeout(t)
+  }, [explosionMs])
+
+  const explosion = explosionMs !== null && (
+    <div className="ptc-explosion-overlay" style={{ animationDuration: `${explosionMs}ms` }} />
+  )
+
+  if (ship.sunk) {
+    return (
+      <div className="group relative w-24 shrink-0" style={{ aspectRatio: '5 / 3' }}>
+        <CardImage cardId={ship.shipId} size="sm" dim />
+        <div className="ptc-stamp pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 py-0.5 text-center text-[10px]">
+          Sunk
+        </div>
+        {explosion}
+        <ShipTooltip ship={ship} players={players} />
+      </div>
+    )
+  }
 
   return (
     <div className="group relative">
@@ -41,7 +67,7 @@ function ShipCard({
           {ship.damage}/{hitPoints}
         </div>
       )}
-      {exploding && <div className="ptc-explosion-overlay" />}
+      {explosion}
       <ShipTooltip ship={ship} players={players} />
     </div>
   )
@@ -65,8 +91,9 @@ export function TaskForceView({
   onSelectShip?: (shipId: string) => void
 }) {
   if (!force) return null
-  const aliveShips = force.ships.filter((s) => !s.sunk)
-  const sunkShips = force.ships.filter((s) => s.sunk)
+  // Alive ships first, then sunk - stable within each group so a ship's card keeps its identity
+  // (and any in-flight explosion) when it flips from alive to sunk.
+  const orderedShips = [...force.ships].sort((a, b) => Number(a.sunk) - Number(b.sunk))
 
   return (
     <div
@@ -87,26 +114,15 @@ export function TaskForceView({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {aliveShips.map((s) => (
+        {orderedShips.map((s) => (
           <ShipCard
             key={s.shipId}
             ship={s}
             hitPoints={getShip(s.shipId).hitPoints}
             isSelected={selectedShipId === s.shipId}
-            onSelect={selectable ? () => onSelectShip?.(s.shipId) : undefined}
+            onSelect={!s.sunk && selectable ? () => onSelectShip?.(s.shipId) : undefined}
             players={players}
           />
-        ))}
-        {sunkShips.map((s) => (
-          <div key={s.shipId} className="group relative w-24 shrink-0" style={{ aspectRatio: '5 / 3' }}>
-            <CardImage cardId={s.shipId} size="sm" dim />
-            <div
-              className="ptc-stamp pointer-events-none absolute inset-x-2 top-1/2 -translate-y-1/2 py-0.5 text-center text-[10px]"
-            >
-              Sunk
-            </div>
-            <ShipTooltip ship={s} players={players} />
-          </div>
         ))}
         {force.ships.length === 0 && <p className="ptc-mono text-sm text-[var(--ink-soft)]">No ships</p>}
       </div>
