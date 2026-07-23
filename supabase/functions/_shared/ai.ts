@@ -89,8 +89,13 @@ const WEIGHTS = {
   oppEliminated: 8,
   /** Heuristic value of deploying a Destroyer Squadron (expected future attack, minus that opponents may shoot it down). */
   deploySquadronValue: 6,
-  /** Value of drawing a card on a fresh turn — the baseline a fresh-turn airstrike must beat. */
-  drawBaseline: 5,
+  /** Value of drawing a card on a fresh turn — the baseline a fresh-turn airstrike must beat.
+      Deliberately high: a single-carrier strike's expected value is ownBankedPoint * hitPoints
+      / 6, so at the old value of 5 almost any live ship with 4+ hit points cleared the bar and
+      the bot airstruck on nearly every turn it had a carrier. This reserves airstrikes for
+      genuinely strong opportunities (a heavy target, multiple carriers, or a finishing blow)
+      rather than treating it as the default action. */
+  drawBaseline: 11,
 }
 
 // Probabilities of a sink for the die-roll attacks.
@@ -470,11 +475,22 @@ function bestAirstrike(view: BotView, botUserId: string): Candidate | null {
 
   // Assign each carrier a distinct top target (reuse the best if carriers outnumber targets).
   const strikes: AirstrikeDeclaration[] = []
-  let expected = 0
+  const hitsPerTarget: number[] = new Array(targets.length).fill(0)
   for (let i = 0; i < carriers.length; i++) {
-    const t = targets[Math.min(i, targets.length - 1)]
-    strikes.push({ carrierShipId: carriers[i].shipId, targetOwnerId: t.ownerId, targetShipId: t.shipId })
-    expected += P_AIRSTRIKE * t.value
+    const idx = Math.min(i, targets.length - 1)
+    hitsPerTarget[idx]++
+    strikes.push({ carrierShipId: carriers[i].shipId, targetOwnerId: targets[idx].ownerId, targetShipId: targets[idx].shipId })
+  }
+  // Two carriers thrown at the same ship don't sink it twice - the shared
+  // target's odds compound (1 - miss^hits), rather than summing each
+  // carrier's P_AIRSTRIKE independently, which would double-count the value
+  // of a single kill and made the bot over-eager to airstrike.
+  let expected = 0
+  for (let idx = 0; idx < targets.length; idx++) {
+    const hits = hitsPerTarget[idx]
+    if (hits === 0) continue
+    const pAtLeastOneHit = 1 - (1 - P_AIRSTRIKE) ** hits
+    expected += pAtLeastOneHit * targets[idx].value
   }
   return { payload: { gameId: view.game.id, type: 'airstrike', strikes }, score: expected }
 }
