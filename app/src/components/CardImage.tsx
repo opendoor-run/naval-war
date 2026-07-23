@@ -12,6 +12,12 @@ function statText(cardId: string): string {
   return ''
 }
 
+function gunSizeText(cardId: string): string {
+  if (!cardId.startsWith('ship-')) return ''
+  const s = getShip(cardId)
+  return s.gunSize != null ? `${s.gunSize}"` : ''
+}
+
 function titleText(cardId: string): string {
   if (cardId.startsWith('ship-')) {
     const s = getShip(cardId)
@@ -68,6 +74,11 @@ export function CardImage({
         {statText(cardId) && (
           <div className="ptc-mono absolute left-1 top-1 border border-[var(--navy-deep)] bg-[var(--amber)] px-1 py-0.5 text-[10px] font-bold leading-none text-[var(--navy-deep)]">
             {statText(cardId)}
+          </div>
+        )}
+        {gunSizeText(cardId) && (
+          <div className="ptc-mono absolute right-1 top-1 border border-[var(--navy-deep)] bg-[var(--amber)] px-1 py-0.5 text-[10px] font-bold leading-none text-[var(--navy-deep)]">
+            {gunSizeText(cardId)}
           </div>
         )}
         {/* Card art already prints the full name/stats - this is just a legibility aid at

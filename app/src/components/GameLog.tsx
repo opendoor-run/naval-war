@@ -15,11 +15,14 @@ export function GameLog({ log }: { log: GameLogRow[] }) {
       </div>
       <div className="ptc-mono flex-1 space-y-1 overflow-y-auto text-xs text-[var(--ink-soft)]">
         {log.length === 0 && <p>Nothing yet.</p>}
-        {log.map((entry) => (
-          <p key={entry.id}>
-            <span style={{ color: 'var(--red)' }}>»</span> {entry.message}
-          </p>
-        ))}
+        {log
+          .slice()
+          .reverse()
+          .map((entry) => (
+            <p key={entry.id}>
+              <span style={{ color: 'var(--red)' }}>»</span> {entry.message}
+            </p>
+          ))}
       </div>
       {showInstructions && <InstructionsModal onClose={() => setShowInstructions(false)} />}
     </div>
