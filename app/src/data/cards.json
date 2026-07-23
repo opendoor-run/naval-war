@@ -113,7 +113,7 @@
     { "id": "play-050", "sheet": "pic81865", "row": 4, "col": 1, "type": "smoke" },
     { "id": "play-051", "sheet": "pic81865", "row": 4, "col": 2, "type": "repair" },
     { "id": "play-052", "sheet": "pic81865", "row": 5, "col": 0, "type": "minefield", "damage": 1 },
-    { "id": "play-053", "sheet": "pic81865", "row": 5, "col": 1, "type": "minefield", "damage": 2 },
+    { "id": "play-053", "sheet": "pic81865", "row": 5, "col": 1, "type": "minefield", "damage": 1 },
     { "id": "play-054", "sheet": "pic81865", "row": 5, "col": 2, "type": "smoke" },
 
     { "id": "play-055", "sheet": "pic81866", "row": 0, "col": 0, "type": "salvo", "gunSize": 11, "damage": 1 },
@@ -161,7 +161,7 @@
     { "id": "play-095", "sheet": "pic81868", "row": 1, "col": 1, "type": "smoke" },
     { "id": "play-096", "sheet": "pic81868", "row": 1, "col": 2, "type": "repair" },
     { "id": "play-097", "sheet": "pic81868", "row": 2, "col": 0, "type": "minefield", "damage": 1 },
-    { "id": "play-098", "sheet": "pic81868", "row": 2, "col": 1, "type": "minefield", "damage": 2 },
+    { "id": "play-098", "sheet": "pic81868", "row": 2, "col": 1, "type": "minefield", "damage": 1 },
     { "id": "play-099", "sheet": "pic81868", "row": 2, "col": 2, "type": "smoke" },
     { "id": "play-100", "sheet": "pic81868", "row": 3, "col": 0, "type": "salvo", "gunSize": 14, "damage": 1 },
     { "id": "play-101", "sheet": "pic81868", "row": 3, "col": 1, "type": "salvo", "gunSize": 14, "damage": 1 },
