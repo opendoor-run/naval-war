@@ -22,6 +22,13 @@ export interface GameContext {
     taskForces: Set<string>
     players: Set<string>
   }
+  /** destroyer_squadrons writes (insert/update/delete) don't go through the dirty-row
+      pattern above since that table isn't loaded as a single per-owner row - queue them
+      here instead so saveContext() awaits them before a handler returns. Queuing (rather
+      than writing inline at the call site) matters because chooseBotAction's caller
+      reloads a fresh GameContext between every action - an un-awaited write there was a
+      real race, letting the next reload see a squadron row that was already resolved. */
+  pendingWrites: (() => PromiseLike<{ error: unknown }>)[]
 }
 
 export async function loadContext(db: SupabaseClient, gameId: string): Promise<GameContext> {
@@ -52,7 +59,14 @@ export async function loadContext(db: SupabaseClient, gameId: string): Promise<G
     destroyerSquadrons: (squads ?? []) as DestroyerSquadronRow[],
     logEntries: [],
     dirty: { game: false, hands: new Set(), taskForces: new Set(), players: new Set() },
+    pendingWrites: [],
   }
+}
+
+/** Queue a destroyer_squadrons write to run inside saveContext(), instead of firing it
+    off unawaited at the call site (see the GameContext.pendingWrites doc comment). */
+export function queueWrite(ctx: GameContext, write: () => PromiseLike<{ error: unknown }>) {
+  ctx.pendingWrites.push(write)
 }
 
 export function findPlayer(ctx: GameContext, userId: string): GamePlayerRow {
@@ -154,6 +168,12 @@ export async function saveContext(ctx: GameContext) {
       .insert(ctx.logEntries.map((e) => ({ game_id: game.id, seat_index: e.seat, message: e.message })))
     if (error) throw error
   }
+
+  for (const write of ctx.pendingWrites) {
+    const result = await write()
+    if (result && 'error' in result && result.error) throw result.error
+  }
+  ctx.pendingWrites = []
 }
 
 function gameUpdatePayload(game: GameRow) {

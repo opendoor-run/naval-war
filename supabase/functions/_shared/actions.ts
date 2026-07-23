@@ -13,6 +13,7 @@ import {
   markPlayerDirty,
   savePlayerScores,
   saveContext,
+  queueWrite,
 } from './context.ts'
 import { HttpError } from './supabaseAdmin.ts'
 import type { GameActionPayload, GamePlayerRow, TaskForceRow } from './types.ts'
@@ -61,7 +62,7 @@ function checkEliminationAndMaybeEndRound(ctx: GameContext, ownerId: string): bo
   for (const sq of theirSquadrons) {
     ctx.destroyerSquadrons = ctx.destroyerSquadrons.filter((s) => s.id !== sq.id)
     ctx.game.discard_pile = [...ctx.game.discard_pile, sq.card_id]
-    void ctx.db.from('destroyer_squadrons').delete().eq('id', sq.id)
+    queueWrite(ctx, () => ctx.db.from('destroyer_squadrons').delete().eq('id', sq.id))
   }
 
   return engine.countActive(ctx.players) === 1
@@ -399,13 +400,9 @@ function applyCardEffect(ctx: GameContext, callerId: string, cardId: string, pay
       return
     }
     case 'destroyer_squadron': {
-      const db = ctx.db
-      void db
-        .from('destroyer_squadrons')
-        .insert({ game_id: ctx.game.id, owner_id: callerId, card_id: cardId, hits_taken: 0 })
-        .then(({ error }) => {
-          if (error) console.error(error)
-        })
+      queueWrite(ctx, () =>
+        ctx.db.from('destroyer_squadrons').insert({ game_id: ctx.game.id, owner_id: callerId, card_id: cardId, hits_taken: 0 })
+      )
       log(ctx, seat, `${nameOf(ctx, callerId)} deployed a Destroyer Squadron.`)
       return
     }
@@ -432,13 +429,9 @@ function applySalvoToDestroyerSquadron(
   const destroyed = squadron.hits_taken >= 4
   ctx.game.discard_pile = [...ctx.game.discard_pile, salvoCardId]
   markGameDirty(ctx)
-  void ctx.db
-    .from('destroyer_squadrons')
-    .update({ hits_taken: squadron.hits_taken })
-    .eq('id', squadron.id)
-    .then(({ error }) => {
-      if (error) console.error(error)
-    })
+  queueWrite(ctx, () =>
+    ctx.db.from('destroyer_squadrons').update({ hits_taken: squadron.hits_taken }).eq('id', squadron.id)
+  )
   log(
     ctx,
     seatOf(ctx, callerId),
@@ -448,7 +441,7 @@ function applySalvoToDestroyerSquadron(
   if (destroyed) {
     ctx.destroyerSquadrons = ctx.destroyerSquadrons.filter((s) => s.id !== squadron.id)
     ctx.game.discard_pile = [...ctx.game.discard_pile, squadron.card_id]
-    void ctx.db.from('destroyer_squadrons').delete().eq('id', squadron.id)
+    queueWrite(ctx, () => ctx.db.from('destroyer_squadrons').delete().eq('id', squadron.id))
   }
 }
 
@@ -590,7 +583,7 @@ async function handleResolveDestroyer(ctx: GameContext, callerId: string, payloa
   ctx.destroyerSquadrons = ctx.destroyerSquadrons.filter((s) => s.id !== squadron.id)
   ctx.game.discard_pile = [...ctx.game.discard_pile, squadron.card_id]
   markGameDirty(ctx)
-  void ctx.db.from('destroyer_squadrons').delete().eq('id', squadron.id)
+  queueWrite(ctx, () => ctx.db.from('destroyer_squadrons').delete().eq('id', squadron.id))
 
   log(
     ctx,
@@ -702,7 +695,7 @@ async function endRound(ctx: GameContext) {
     markForceDirty(ctx, p.user_id)
   }
   for (const sq of ctx.destroyerSquadrons) {
-    void ctx.db.from('destroyer_squadrons').delete().eq('id', sq.id)
+    queueWrite(ctx, () => ctx.db.from('destroyer_squadrons').delete().eq('id', sq.id))
   }
   ctx.destroyerSquadrons = []
 
