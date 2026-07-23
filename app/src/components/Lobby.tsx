@@ -119,7 +119,7 @@ export function Lobby({
               disabled={busy || players.length >= game.max_players}
               className="ptc-btn w-full py-2 text-sm"
             >
-              Add AI Opponent
+              Add CPU Opponent
             </button>
 
             <button onClick={handleStart} disabled={busy || players.length < 3} className="ptc-btn ptc-btn-primary w-full py-2">
