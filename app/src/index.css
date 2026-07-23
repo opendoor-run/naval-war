@@ -287,3 +287,33 @@ body {
   );
   animation: ptc-smoke-fade-in 900ms ease-out;
 }
+
+/* ── Explosion flash (ship card, briefly plays when struck by a Salvo) ─── */
+@keyframes ptc-explosion-burst {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+.ptc-explosion-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 179, 71, 0.9) 25%,
+    rgba(164, 52, 36, 0.85) 55%,
+    transparent 75%
+  );
+  animation: ptc-explosion-burst 650ms ease-out;
+}
