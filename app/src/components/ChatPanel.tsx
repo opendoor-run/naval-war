@@ -35,7 +35,7 @@ export function ChatPanel({
   }
 
   return (
-    <div className="fixed right-4 top-1/2 z-40 w-72 max-w-[calc(100vw-2rem)] -translate-y-1/2">
+    <div className="fixed bottom-4 right-4 z-40 w-72 max-w-[calc(100vw-2rem)]">
       <div className="ptc-panel overflow-hidden">
         <button onClick={() => setOpen((o) => !o)} className="ptc-headline flex w-full items-center justify-between px-3 py-2 text-sm hover:bg-[var(--parchment-lo)]/40">
           <span>Radio</span>
