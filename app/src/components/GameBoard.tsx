@@ -270,6 +270,11 @@ export function GameBoard({
               interactive={isMyNormalTurn || isMySpecialTurn}
             />
           </div>
+
+          {/* Kept in the left column, away from the Radio chat panel fixed to the bottom-right. */}
+          <div className="h-64">
+            <GameLog log={log} />
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -288,9 +293,6 @@ export function GameBoard({
               </div>
             </div>
           )}
-          <div className="h-64">
-            <GameLog log={log} />
-          </div>
         </div>
       </div>
     </div>
