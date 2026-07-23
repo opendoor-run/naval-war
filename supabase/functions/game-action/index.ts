@@ -5,7 +5,14 @@ import { chooseBotAction } from '../_shared/ai.ts'
 import type { GameActionPayload } from '../_shared/types.ts'
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2'
 
-/** After a human action resolves, play out any consecutive bot turns that follow, one action at a time. */
+const BOT_DECISION_DELAY_MS = 1750
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** After a human action resolves, play out any consecutive bot turns that follow, one action at a time,
+    pausing between each so bot moves are readable rather than instant. */
 async function runBotTurns(db: SupabaseClient, gameId: string) {
   let turnState: { seat: number; hasDrawn: boolean } | null = null
   // Generous but finite guard against an unexpected infinite loop in ai.ts.
@@ -21,6 +28,7 @@ async function runBotTurns(db: SupabaseClient, gameId: string) {
     const action = chooseBotAction(ctx, player.user_id, turnState.hasDrawn)
     if (!action) return
 
+    await sleep(BOT_DECISION_DELAY_MS)
     const result = (await dispatchAction(ctx, player.user_id, action)) as { resolved?: boolean }
     turnState = action.type === 'draw' && result.resolved === false ? { seat, hasDrawn: true } : null
   }
