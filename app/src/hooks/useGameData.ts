@@ -91,7 +91,8 @@ export function useGameData(gameId: string | undefined, userId: string | undefin
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'game_log', filter: `game_id=eq.${gameId}` },
         (payload) => {
-          setLog((prev) => [...prev, payload.new as GameLogRow].slice(-50))
+          const row = payload.new as GameLogRow
+          setLog((prev) => (prev.some((e) => e.id === row.id) ? prev : [...prev, row].slice(-50)))
         }
       )
       .subscribe((status) => {
