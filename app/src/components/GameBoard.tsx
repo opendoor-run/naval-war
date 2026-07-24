@@ -225,6 +225,11 @@ export function GameBoard({
               busy={busy}
               onCancel={() => setSelectedCardId(null)}
               onConfirm={(target) => handlePlayTarget(selectedCardId, target)}
+              onDiscard={
+                isMyNormalTurn
+                  ? () => run(() => dispatch({ gameId: game.id, type: 'discard', cardId: selectedCardId }))
+                  : undefined
+              }
             />
           )}
 
@@ -249,15 +254,6 @@ export function GameBoard({
                   {!game.drawn_this_turn && myForce?.ships.some((s) => !s.sunk && getShip(s.shipId).isCarrier) && (
                     <button disabled={busy} onClick={() => setMode('airstrike')} className="ptc-btn px-3 py-1 text-xs">
                       Airstrike
-                    </button>
-                  )}
-                  {selectedCardId && (
-                    <button
-                      disabled={busy}
-                      onClick={() => run(() => dispatch({ gameId: game.id, type: 'discard', cardId: selectedCardId }))}
-                      className="ptc-btn px-3 py-1 text-xs"
-                    >
-                      Discard Selected
                     </button>
                   )}
                   {!game.drawn_this_turn && (

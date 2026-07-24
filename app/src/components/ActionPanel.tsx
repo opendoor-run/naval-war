@@ -18,6 +18,7 @@ export function ActionPanel({
   onCancel,
   busy,
   allowCancel = true,
+  onDiscard,
 }: {
   cardId: string
   title: string
@@ -29,6 +30,7 @@ export function ActionPanel({
   onCancel: () => void
   busy: boolean
   allowCancel?: boolean
+  onDiscard?: () => void
 }) {
   const card = getPlayCard(cardId)
   const [targetOwnerId, setTargetOwnerId] = useState<string | null>(null)
@@ -213,6 +215,11 @@ export function ActionPanel({
         {allowCancel && (
           <button onClick={onCancel} disabled={busy} className="ptc-btn px-4 py-1.5 text-sm">
             Cancel
+          </button>
+        )}
+        {onDiscard && (
+          <button onClick={onDiscard} disabled={busy} className="ptc-btn px-4 py-1.5 text-sm">
+            Discard Selected
           </button>
         )}
       </div>
