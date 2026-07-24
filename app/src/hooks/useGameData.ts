@@ -113,5 +113,23 @@ export function useGameData(gameId: string | undefined, userId: string | undefin
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [reloadAll])
 
+  useEffect(() => {
+    if (!gameId) return
+    // Realtime can silently stall without ever reporting a disconnect, leaving the
+    // subscribed INSERT handler above stuck - poll game_log directly as a fallback.
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('game_log')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      if (!data) return
+      const rows = (data as GameLogRow[]).slice().reverse()
+      setLog((prev) => (prev.length === rows.length && prev.at(-1)?.id === rows.at(-1)?.id ? prev : rows))
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [gameId])
+
   return { game, players, myHand, taskForces, destroyerSquadrons, log, loading }
 }
