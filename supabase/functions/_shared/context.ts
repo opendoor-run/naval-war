@@ -157,7 +157,7 @@ export async function saveContext(ctx: GameContext) {
       const hand = ctx.hands.get(userId)!
       const { error } = await db
         .from('hands')
-        .update({ cards: hand.cards })
+        .update({ cards: hand.cards, pending_card: hand.pending_card })
         .eq('game_id', game.id)
         .eq('user_id', userId)
       if (error) throw error
