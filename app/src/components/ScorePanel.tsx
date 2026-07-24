@@ -20,10 +20,9 @@ export function ScorePanel({ game, players, myUserId }: { game: GameRow; players
               }`}
             >
               {(isTurn || isSetupTurn) && (
-                <span
-                  title="Current turn"
-                  className="ptc-dazzle-bar inline-block h-3 w-3 shrink-0 border border-[var(--navy-deep)]"
-                />
+                <span title="Current turn" style={{ color: 'var(--red)' }}>
+                  ▶
+                </span>
               )}
               <span className={p.is_eliminated_this_round ? 'text-[var(--ink-soft)] line-through' : 'text-[var(--ink)]'}>
                 {p.display_name}

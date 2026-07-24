@@ -1,40 +1,27 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────────────────
-   DAZZLE COMMAND — a wartime silkscreen poster crossed with dazzle-camouflage
-   graphics. Flat poster-ink color blocks, hard edges, print-misregistration
-   offset shadows, and a diagonal dazzle-stripe motif standing in for every
-   "who's active / what's critical" signal in the UI. Deliberately graphic
-   and flat rather than tactile/photoreal — see DESIGN.md.
+   Pacific Theater Command — a 1940s naval HQ plotting table.
+   Tactile realism / skeuomorphism: sharp edges, stamped metal, aged
+   parchment, ink. Deliberately single-theme (a physical, daylit surface
+   has no natural "dark mode") — see DESIGN.md.
    ───────────────────────────────────────────────────────────────────────── */
 
 @font-face {
-  font-family: "Allerta Stencil";
-  src: url("/fonts/AllertaStencil-Regular.woff2") format("woff2");
+  font-family: "Bebas Neue";
+  src: url("/fonts/BebasNeue-Regular.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Courier Prime";
+  src: url("/fonts/CourierPrime-Regular.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
-  font-family: "Public Sans";
-  src: url("/fonts/PublicSans-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Public Sans";
-  src: url("/fonts/PublicSans-SemiBold.woff2") format("woff2");
-  font-weight: 600;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Public Sans";
-  src: url("/fonts/PublicSans-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-display: swap;
-}
-@font-face {
-  font-family: "IBM Plex Mono";
-  src: url("/fonts/IBMPlexMono-Medium.woff2") format("woff2");
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Medium.woff2") format("woff2");
   font-weight: 500;
   font-display: swap;
 }
@@ -42,30 +29,20 @@
 :root {
   color-scheme: light;
 
-  /* Named tokens (see DESIGN.md): Haze Gray, Bone White, Ink Navy, Signal
-     Red, Flag Gold, Sea Teal. Reusing the existing --parchment/--navy/etc
-     variable names (rather than renaming) so every component that already
-     reads them repaints automatically. */
-  --deck: #6e7671;
-  --parchment: #ded6c0;
-  --parchment-hi: #f3eedf;
-  --parchment-lo: #b6aa8c;
-  --navy: #2a3f63;
-  --navy-deep: #12192a;
-  --olive: #2f6e6e;
-  --red: #c1352a;
-  --amber: #e2a33b;
-  --ink: #17140f;
-  --ink-soft: #5b5646;
+  --parchment: #d9cdb8;
+  --parchment-hi: #e8e0cd;
+  --parchment-lo: #c7b99f;
+  --navy: #2b3d4f;
+  --navy-deep: #152738;
+  --olive: #4a5240;
+  --red: #a43424;
+  --amber: #ffb347;
+  --ink: #1b2530;
+  --ink-soft: #4d5a63;
 
-  --font-display: "Allerta Stencil", "Arial Narrow", sans-serif;
-  --font-body: "Public Sans", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
-
-  /* The dazzle stripe angle/spacing, reused everywhere the motif appears
-     (background field, panel edge, turn indicator) so they all read as one
-     consistent pattern rather than several unrelated diagonals. */
-  --dazzle-angle: -38deg;
+  --font-display: "Bebas Neue", "Arial Narrow", sans-serif;
+  --font-body: "Courier Prime", "Courier New", monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 body {
@@ -75,12 +52,11 @@ body {
   color: var(--ink);
 }
 
-/* The command room floor: flat Haze Gray hull-paint, with a faint dazzle
-   stripe field worked into it — quiet enough to read as texture, not
-   pattern, until you look for it. */
+/* The plotting-table surface: aged parchment, weathered from long use in the field -
+   paper grain, coffee/water stains, scorched corners, a few creases. */
 .command-room {
   position: relative;
-  background: var(--deck);
+  background: var(--parchment);
   isolation: isolate;
 }
 .command-room::before {
@@ -89,18 +65,42 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.5;
-  background:
-    repeating-linear-gradient(
-      var(--dazzle-angle),
-      rgba(18, 25, 42, 0.1) 0 3px,
-      transparent 3px 46px
-    ),
-    repeating-linear-gradient(
-      calc(var(--dazzle-angle) * -1),
-      rgba(243, 238, 223, 0.07) 0 2px,
-      transparent 2px 64px
-    );
+  opacity: 0.14;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+/* Stains, scorching, and creases - the map has been leaned on, spilled on, and
+   pinned up under a hot lamp for weeks. Heaviest wear in the bottom-right
+   quadrant, like a chart worked over by a right-handed plotter for years. */
+.command-room::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    /* creases where the chart's been folded and re-pinned */
+    linear-gradient(100deg, transparent 39%, rgba(21, 39, 56, 0.08) 40%, rgba(21, 39, 56, 0.08) 40.5%, transparent 42%),
+    linear-gradient(12deg, transparent 62%, rgba(21, 39, 56, 0.07) 62.8%, rgba(21, 39, 56, 0.07) 63.4%, transparent 65%),
+    linear-gradient(150deg, transparent 71%, rgba(21, 39, 56, 0.06) 71.6%, rgba(21, 39, 56, 0.06) 72.1%, transparent 73.5%),
+    /* upper-left / center wear, lighter than the bottom-right */
+    radial-gradient(circle 130px at 12% 18%, rgba(74, 82, 64, 0.18), rgba(74, 82, 64, 0.18) 90%, transparent 96%),
+    radial-gradient(ellipse 340px 260px at 88% 12%, rgba(74, 82, 64, 0.14), transparent 70%),
+    radial-gradient(ellipse 260px 300px at 6% 88%, rgba(21, 39, 56, 0.12), transparent 65%),
+    radial-gradient(ellipse 500px 300px at 42% 42%, rgba(122, 88, 48, 0.08), transparent 72%),
+    /* bottom-right quadrant: heavy stain cluster */
+    radial-gradient(circle 160px at 82% 70%, rgba(122, 88, 48, 0.22), rgba(122, 88, 48, 0.22) 85%, transparent 95%),
+    radial-gradient(ellipse 300px 240px at 95% 60%, rgba(21, 39, 56, 0.16), transparent 72%),
+    radial-gradient(ellipse 420px 380px at 78% 92%, rgba(122, 88, 48, 0.18), transparent 68%),
+    radial-gradient(circle 110px at 68% 78%, rgba(74, 82, 64, 0.16), rgba(74, 82, 64, 0.16) 88%, transparent 95%),
+    radial-gradient(ellipse 260px 300px at 92% 95%, rgba(21, 39, 56, 0.2), transparent 65%),
+    radial-gradient(ellipse 380px 260px at 60% 65%, rgba(122, 88, 48, 0.1), transparent 72%),
+    /* scorched, dog-eared corners - bottom-right darkest */
+    radial-gradient(ellipse 340px 300px at 0% 0%, rgba(21, 39, 56, 0.24), transparent 58%),
+    radial-gradient(ellipse 340px 300px at 100% 0%, rgba(21, 39, 56, 0.2), transparent 58%),
+    radial-gradient(ellipse 460px 420px at 100% 100%, rgba(21, 39, 56, 0.32), transparent 62%),
+    radial-gradient(ellipse 380px 340px at 0% 100%, rgba(21, 39, 56, 0.22), transparent 60%);
+  mix-blend-mode: multiply;
 }
 .command-room > * {
   position: relative;
@@ -108,134 +108,120 @@ body {
 }
 
 /* ── Typography helpers ─────────────────────────────────────────────── */
-/* Stencil display face — spent on exactly one thing per screen (the page
-   title / hero banner). Everything else stays in Public Sans so small
-   labels don't fight the stencil's open counters. */
 .ptc-display {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--navy-deep);
+  text-shadow: 0.4px 0.4px 0 rgba(27, 37, 48, 0.25);
 }
 .ptc-headline {
-  font-family: var(--font-body);
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--navy-deep);
+  color: var(--navy);
 }
 .ptc-mono {
   font-family: var(--font-mono);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 
-/* ── Flat poster panel: hard navy rule, offset "misregistration" shadow ── */
+/* ── Sharp bordered surface (a "document" or "plate" laid on the table) ── */
 .ptc-panel {
-  position: relative;
   background: var(--parchment-hi);
-  border: 2px solid var(--navy-deep);
+  border: 1px solid var(--navy-deep);
   border-radius: 0;
-  box-shadow: 4px 4px 0 var(--navy-deep);
+  box-shadow: 2px 2px 0 rgba(21, 39, 56, 0.15);
 }
 
-/* ── Clipboard → dazzle bar: a striped band across the panel's top edge,
-   the same stripe language as the command-room floor and the turn
-   indicator, standing in for the old metal clip. ── */
+/* ── Clipboard: a ptc-panel with a metal clip on top ────────────────── */
 .ptc-clipboard {
   position: relative;
-  padding-top: 26px;
+  padding-top: 22px;
 }
 .ptc-clipboard::before {
   content: "";
   position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
   height: 14px;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--navy-deep) 0 8px,
-    var(--amber) 8px 16px
-  );
-  border-bottom: 2px solid var(--navy-deep);
+  background: linear-gradient(180deg, #8b95a0, #5c6570);
+  border: 1px solid var(--navy-deep);
+  border-radius: 2px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 2px 3px rgba(0, 0, 0, 0.35);
 }
 
-/* ── Rivets → registration marks: small offset ticks at the panel corners,
-   like a printer's crop marks rather than physical fasteners. ── */
+/* ── Rivets at the corners of a panel ───────────────────────────────── */
 .ptc-rivets {
   background-image:
-    linear-gradient(var(--navy-deep), var(--navy-deep)),
-    linear-gradient(var(--navy-deep), var(--navy-deep)),
-    linear-gradient(var(--navy-deep), var(--navy-deep)),
-    linear-gradient(var(--navy-deep), var(--navy-deep));
+    radial-gradient(circle 3px at 8px 8px, var(--navy-deep) 40%, transparent 42%),
+    radial-gradient(circle 3px at calc(100% - 8px) 8px, var(--navy-deep) 40%, transparent 42%);
   background-repeat: no-repeat;
-  background-size:
-    1px 9px,
-    9px 1px,
-    1px 9px,
-    9px 1px;
-  background-position:
-    6px 2px,
-    2px 6px,
-    calc(100% - 7px) 2px,
-    calc(100% - 10px) 6px;
 }
 
-/* ── Ink stamp: stencilled, rotated, dashed - the one other place the
-   display face is allowed to appear. ── */
+/* ── Ink stamp: a rotated, dashed, multiply-blended status mark ────── */
 .ptc-stamp {
-  font-family: var(--font-display);
-  background: var(--parchment-hi);
-  border: 2px dashed var(--red);
+  font-family: var(--font-mono);
+  background: transparent;
+  border: 1.5px dashed var(--red);
   border-radius: 0;
   color: var(--red);
-  font-weight: 400;
-  letter-spacing: 0.05em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   transform: rotate(-3deg);
+  opacity: 0.85;
+  mix-blend-mode: multiply;
 }
 
-/* ── Flat poster button: solid color, hard border, offset print-shadow
-   that tucks in on press instead of an embossed metal gradient. ── */
+/* ── Stamped metal button: embossed plate, inset on press ──────────── */
 .ptc-btn {
   font-family: var(--font-mono);
-  background: var(--parchment-hi);
-  border: 2px solid var(--navy-deep);
-  border-radius: 0;
+  background: linear-gradient(180deg, var(--parchment-hi), var(--parchment-lo));
+  border: 1px solid var(--navy-deep);
+  border-radius: 2px;
   color: var(--navy-deep);
   text-transform: uppercase;
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: 0.02em;
-  box-shadow: 3px 3px 0 var(--navy-deep);
-  transition: transform 100ms ease, box-shadow 100ms ease, filter 100ms ease;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 2px 0 rgba(21, 39, 56, 0.3);
+  transition: filter 100ms ease, transform 100ms ease, box-shadow 100ms ease;
   cursor: pointer;
 }
 .ptc-btn:hover:not(:disabled) {
-  filter: brightness(0.97);
+  filter: brightness(0.96);
 }
 .ptc-btn:active:not(:disabled) {
-  box-shadow: 0 0 0 var(--navy-deep);
-  transform: translate(3px, 3px);
+  box-shadow: 0 1px 2px rgba(21, 39, 56, 0.4) inset;
+  transform: translateY(1px);
 }
 .ptc-btn:disabled {
   opacity: 0.5;
   cursor: default;
 }
 .ptc-btn-primary {
-  background: var(--navy-deep);
+  background: linear-gradient(180deg, var(--navy), var(--navy-deep));
   color: var(--parchment-hi);
   border-color: var(--navy-deep);
-  box-shadow: 3px 3px 0 var(--amber);
-}
-.ptc-btn-primary:active:not(:disabled) {
-  box-shadow: 0 0 0 var(--amber);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15) inset,
+    0 2px 0 rgba(0, 0, 0, 0.4);
 }
 .ptc-btn-danger {
-  background: var(--red);
+  background: linear-gradient(180deg, #b5462f, var(--red));
   color: var(--parchment-hi);
   border-color: var(--navy-deep);
-  box-shadow: 3px 3px 0 var(--navy-deep);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.2) inset,
+    0 2px 0 rgba(0, 0, 0, 0.4);
 }
 .ptc-btn:focus-visible {
   outline: 2px solid var(--amber);
@@ -246,7 +232,7 @@ body {
 .ptc-chip {
   font-family: var(--font-mono);
   background: var(--parchment);
-  border: 2px solid var(--navy-deep);
+  border: 1px solid var(--navy-deep);
   border-radius: 0;
   color: var(--ink);
   transition: background 100ms ease;
@@ -260,47 +246,23 @@ body {
   font-weight: 700;
 }
 
-/* ── Input field: underlined blank, set in the body face ────────────── */
+/* ── Input field styled as an underlined typewriter blank ──────────── */
 .ptc-input {
   font-family: var(--font-body);
   background: transparent;
   border: none;
-  border-bottom: 2px solid var(--navy-deep);
+  border-bottom: 1.5px solid var(--navy-deep);
   border-radius: 0;
   color: var(--ink);
   padding: 6px 2px;
 }
 .ptc-input::placeholder {
   color: var(--ink-soft);
-  opacity: 0.7;
+  opacity: 0.6;
 }
 .ptc-input:focus {
   outline: none;
   border-bottom-color: var(--red);
-}
-
-/* ── Dazzle bar: the signature motif itself, reusable wherever the UI
-   needs to say "this is the live/active thing" - a swatch of the same
-   diagonal stripe as the command-room floor and the clipboard band, but
-   animated, like a searchlight sweeping across a hull's dazzle pattern.
-   Used for the active player's turn indicator. ── */
-@keyframes ptc-dazzle-sweep {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 64px 0;
-  }
-}
-.ptc-dazzle-bar {
-  position: relative;
-  overflow: hidden;
-  background: repeating-linear-gradient(
-    var(--dazzle-angle),
-    var(--navy-deep) 0 8px,
-    var(--amber) 8px 16px
-  );
-  animation: ptc-dazzle-sweep 2.4s linear infinite;
 }
 
 /* ── Smoke screen overlay (fleet view, fades in when a Smoke card is played) ── */
@@ -349,8 +311,8 @@ body {
   background: radial-gradient(
     circle,
     rgba(255, 255, 255, 0.95) 0%,
-    rgba(226, 163, 59, 0.9) 25%,
-    rgba(193, 53, 42, 0.85) 55%,
+    rgba(255, 179, 71, 0.9) 25%,
+    rgba(164, 52, 36, 0.85) 55%,
     transparent 75%
   );
   animation: ptc-explosion-burst 650ms ease-out;

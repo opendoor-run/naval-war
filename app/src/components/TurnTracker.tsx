@@ -42,10 +42,9 @@ export function TurnTracker({
               key={p.user_id}
               className={`ptc-mono flex shrink-0 items-center gap-1 whitespace-nowrap border px-2 py-1 text-xs ${
                 isActive
-                  ? 'ptc-dazzle-bar border-[var(--navy-deep)] font-bold text-[var(--parchment-hi)] shadow-[2px_2px_0_var(--navy-deep)]'
+                  ? 'border-[var(--red)] bg-[var(--amber)] font-bold text-[var(--navy-deep)] shadow-[1px_1px_0_var(--navy-deep)]'
                   : 'border-[var(--navy-deep)] bg-[var(--parchment)] text-[var(--navy-deep)]'
               } ${p.is_eliminated_this_round ? 'opacity-50 line-through' : ''}`}
-              style={isActive ? { textShadow: '0 1px 3px rgba(18,25,42,0.85)' } : undefined}
             >
               <span>{p.display_name}</span>
               {p.seat_index === game.dealer_seat && (
