@@ -1,0 +1,14 @@
+-- Fix: resolved/destroyed Destroyer Squadrons stayed visible on other players' boards after
+-- being deleted server-side.
+--
+-- destroyer_squadrons' primary key is `id` alone (not game_id-inclusive), so Postgres's
+-- default REPLICA IDENTITY only puts `id` in the old-row image it sends on DELETE. The
+-- client's realtime subscription filters on `game_id=eq.<id>` (useGameData.ts), and
+-- Supabase Realtime can't evaluate that filter against a delete event that doesn't carry
+-- game_id at all - so the delete is silently never delivered, and the client's local
+-- squadron list never drops the resolved row. (Every other filtered/deleted table's primary
+-- key already includes game_id, so this table is the only one affected.)
+--
+-- REPLICA IDENTITY FULL makes Postgres include the entire old row on UPDATE/DELETE, which
+-- lets the filter match correctly. The extra WAL volume is negligible for a table this small.
+alter table destroyer_squadrons replica identity full;
