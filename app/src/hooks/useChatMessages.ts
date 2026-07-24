@@ -16,7 +16,8 @@ export function useChatMessages(gameId: string | undefined, userId: string | und
       .eq('game_id', gameId)
       .order('created_at', { ascending: true })
       .limit(200)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error('useChatMessages: failed to load messages', error)
         if (!cancelled && data) setMessages(data as ChatMessageRow[])
       })
 

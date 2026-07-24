@@ -108,7 +108,8 @@ export function GameBoard({
   if (!myPlayer) return null
 
   const mustResolveSquadron = isMyNormalTurn && !!mySquadron
-  const hasPendingDrawn = isMyNormalTurn && !!game.pending_drawn_card
+  const pendingCardId = myHand?.pending_card ?? null
+  const hasPendingDrawn = isMyNormalTurn && !!pendingCardId
 
   async function run(fn: () => Promise<unknown>) {
     setBusy(true)
@@ -137,9 +138,9 @@ export function GameBoard({
       <div className="mx-auto grid max-w-[clamp(72rem,92vw,100rem)] grid-cols-1 gap-4 px-4 pb-6 pt-4 lg:grid-cols-[1fr_280px] 2xl:grid-cols-[1fr_340px]">
         <div className="space-y-4">
           <div className="ptc-mono flex flex-wrap items-center gap-3 text-sm text-[var(--ink-soft)]">
-            <span>Draw pile: {game.draw_pile.length}</span>
-            <span>Discard: {game.discard_pile.length}</span>
-            <span>Harbor: {game.harbor_pile.length}</span>
+            <span>Draw pile: {game.draw_count}</span>
+            <span>Discard: {game.discard_count}</span>
+            <span>Harbor: {game.harbor_count}</span>
           </div>
 
           {/* Opponent fleets */}
@@ -181,9 +182,9 @@ export function GameBoard({
             />
           )}
 
-          {!mustResolveSquadron && hasPendingDrawn && game.pending_drawn_card && (
+          {!mustResolveSquadron && hasPendingDrawn && pendingCardId && (
             <ActionPanel
-              cardId={game.pending_drawn_card}
+              cardId={pendingCardId}
               title="You drew this card - resolve it now"
               players={players}
               myUserId={myUserId}
@@ -192,7 +193,7 @@ export function GameBoard({
               busy={busy}
               allowCancel={false}
               onCancel={() => {}}
-              onConfirm={(target) => handlePlayTarget(game.pending_drawn_card!, target)}
+              onConfirm={(target) => handlePlayTarget(pendingCardId, target)}
             />
           )}
 

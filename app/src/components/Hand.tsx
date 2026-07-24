@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { CardImage } from './CardImage'
 import { SPECIAL_PHASE_TYPES, getPlayCard, getShip } from '../lib/cards'
 import type { TaskForceRow } from '../types/game'
@@ -17,23 +18,28 @@ export function Hand({
   specialPhaseMode: boolean
   interactive: boolean
 }) {
-  const usableGunSizes = new Set(
-    (myForce?.ships ?? []).filter((s) => !s.sunk).map((s) => getShip(s.shipId).gunSize)
+  const usableGunSizes = useMemo(
+    () => new Set((myForce?.ships ?? []).filter((s) => !s.sunk).map((s) => getShip(s.shipId).gunSize)),
+    [myForce]
   )
 
   // Salvo cards first, ordered by gun size (biggest guns first); everything else keeps its original order after.
-  const sortedCards = cards
-    .map((cardId, index) => ({ cardId, index }))
-    .sort((a, b) => {
-      const cardA = getPlayCard(a.cardId)
-      const cardB = getPlayCard(b.cardId)
-      const salvoA = cardA.type === 'salvo'
-      const salvoB = cardB.type === 'salvo'
-      if (salvoA && salvoB) return (cardB.gunSize ?? 0) - (cardA.gunSize ?? 0)
-      if (salvoA !== salvoB) return salvoA ? -1 : 1
-      return a.index - b.index
-    })
-    .map((c) => c.cardId)
+  const sortedCards = useMemo(
+    () =>
+      cards
+        .map((cardId, index) => ({ cardId, index }))
+        .sort((a, b) => {
+          const cardA = getPlayCard(a.cardId)
+          const cardB = getPlayCard(b.cardId)
+          const salvoA = cardA.type === 'salvo'
+          const salvoB = cardB.type === 'salvo'
+          if (salvoA && salvoB) return (cardB.gunSize ?? 0) - (cardA.gunSize ?? 0)
+          if (salvoA !== salvoB) return salvoA ? -1 : 1
+          return a.index - b.index
+        })
+        .map((c) => c.cardId),
+    [cards]
+  )
 
   return (
     <div className="flex flex-wrap items-end gap-2">

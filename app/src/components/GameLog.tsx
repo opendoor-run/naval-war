@@ -1,6 +1,9 @@
-import { useState } from 'react'
-import { InstructionsModal } from './InstructionsModal'
+import { lazy, Suspense, useState } from 'react'
 import type { GameLogRow } from '../types/game'
+
+const InstructionsModal = lazy(() =>
+  import('./InstructionsModal').then((m) => ({ default: m.InstructionsModal }))
+)
 
 export function GameLog({ log }: { log: GameLogRow[] }) {
   const [showInstructions, setShowInstructions] = useState(false)
@@ -24,7 +27,11 @@ export function GameLog({ log }: { log: GameLogRow[] }) {
             </p>
           ))}
       </div>
-      {showInstructions && <InstructionsModal onClose={() => setShowInstructions(false)} />}
+      {showInstructions && (
+        <Suspense fallback={null}>
+          <InstructionsModal onClose={() => setShowInstructions(false)} />
+        </Suspense>
+      )}
     </div>
   )
 }

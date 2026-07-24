@@ -8,7 +8,10 @@ const cardsSrcDir = path.resolve(root, '../cards')
 const outDir = path.join(root, 'public', 'cards')
 mkdirSync(outDir, { recursive: true })
 
-const data = JSON.parse(readFileSync(path.join(root, 'src/data/cards.json'), 'utf8'))
+// Crop coordinates (sheet/row/col) live in a build-only file, separate from the runtime
+// cards.json that ships to the client - the client never needs to know where on a scanned
+// sheet a card's art came from.
+const data = JSON.parse(readFileSync(path.join(root, 'src/data/cards-crop.json'), 'utf8'))
 const allCards = [...data.shipDeck, ...data.playDeck]
 
 // pic81863 is physically a 3x7 sheet with a blank 7th row (confirmed by

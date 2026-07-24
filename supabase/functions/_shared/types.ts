@@ -11,13 +11,28 @@ export interface GameRow {
   dealer_seat: number | null
   turn_seat: number | null
   special_phase_seat: number | null
-  draw_pile: string[]
-  discard_pile: string[]
-  harbor_pile: string[]
-  pending_drawn_card: string | null
+  draw_count: number
+  discard_count: number
+  harbor_count: number
+  has_pending_card: boolean
   drawn_this_turn: boolean
   version: number
 }
+
+/** Server-only: the actual pile contents, split out of `games` (0005) so no
+    client can ever read the deck/harbor order. */
+export interface GameSecretsRow {
+  game_id: string
+  draw_pile: string[]
+  discard_pile: string[]
+  harbor_pile: string[]
+}
+
+/** The in-memory shape `GameContext.game` uses everywhere: the public row
+    plus the secret piles, merged by `loadContext` and split back apart by
+    `saveContext`. Lets engine/action code keep reading `game.draw_pile` etc.
+    unchanged even though they now live in a different table. */
+export type GameState = GameRow & Pick<GameSecretsRow, 'draw_pile' | 'discard_pile' | 'harbor_pile'>
 
 export interface GamePlayerRow {
   game_id: string
@@ -33,6 +48,7 @@ export interface HandRow {
   game_id: string
   user_id: string
   cards: string[]
+  pending_card: string | null
 }
 
 export interface AdditionalDamage {

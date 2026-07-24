@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { usePresence } from '../hooks/usePresence'
 import { supabase } from '../lib/supabase'
 import { createGame, deleteGame } from '../lib/api'
 import { SignInGate } from '../components/SignInGate'
-import { InstructionsModal } from '../components/InstructionsModal'
+
+const InstructionsModal = lazy(() =>
+  import('../components/InstructionsModal').then((m) => ({ default: m.InstructionsModal }))
+)
 
 interface MyGame {
   game_id: string
@@ -42,7 +45,8 @@ export default function HomePage() {
       .from('game_players')
       .select('game_id, seat_index, games(status, host_id)')
       .eq('user_id', user.id)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error('HomePage: failed to load my games', error)
         if (!data) return
         setMyGames(
           data.map((d) => ({
@@ -141,6 +145,7 @@ export default function HomePage() {
               value={nameInput}
               onChange={(e) => setNameInput(e.target.value)}
               placeholder="Admiral Nelson"
+              maxLength={32}
             />
             {nameChanged && (
               <button onClick={handleSaveName} disabled={savingName} className="ptc-btn shrink-0 px-3 py-1 text-xs">
@@ -283,7 +288,11 @@ export default function HomePage() {
           )}
         </div>
       </div>
-      {showInstructions && <InstructionsModal onClose={() => setShowInstructions(false)} />}
+      {showInstructions && (
+        <Suspense fallback={null}>
+          <InstructionsModal onClose={() => setShowInstructions(false)} />
+        </Suspense>
+      )}
     </div>
   )
 }

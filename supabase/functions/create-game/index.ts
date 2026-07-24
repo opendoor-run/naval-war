@@ -10,8 +10,13 @@ Deno.serve(async (req) => {
     const maxPlayers = Number(body.maxPlayers ?? 6)
 
     if (!displayName) throw new HttpError(400, 'displayName is required')
-    if (maxPlayers < 3 || maxPlayers > 9) throw new HttpError(400, 'maxPlayers must be between 3 and 9')
-    if (targetScore < 10) throw new HttpError(400, 'targetScore must be at least 10')
+    if (displayName.length > 32) throw new HttpError(400, 'displayName must be at most 32 characters')
+    if (!Number.isInteger(maxPlayers) || maxPlayers < 3 || maxPlayers > 9) {
+      throw new HttpError(400, 'maxPlayers must be a whole number between 3 and 9')
+    }
+    if (!Number.isInteger(targetScore) || targetScore < 10 || targetScore > 100000) {
+      throw new HttpError(400, 'targetScore must be a whole number between 10 and 100000')
+    }
 
     const db = adminClient()
 

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { getShip } from '../lib/cards'
 import type { GamePlayerRow, ShipState } from '../types/game'
 
@@ -6,7 +7,7 @@ function nameFor(players: GamePlayerRow[], userId: string): string {
 }
 
 /** Shown on hover over a ship chip - lives inside a `group` + `relative` wrapper. */
-export function ShipTooltip({ ship, players }: { ship: ShipState; players: GamePlayerRow[] }) {
+export const ShipTooltip = memo(function ShipTooltip({ ship, players }: { ship: ShipState; players: GamePlayerRow[] }) {
   const card = getShip(ship.shipId)
   return (
     <div
@@ -41,4 +42,4 @@ export function ShipTooltip({ ship, players }: { ship: ShipState; players: GameP
       )}
     </div>
   )
-}
+})

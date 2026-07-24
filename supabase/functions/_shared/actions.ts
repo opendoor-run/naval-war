@@ -11,7 +11,6 @@ import {
   markHandDirty,
   markForceDirty,
   markPlayerDirty,
-  savePlayerScores,
   saveContext,
   queueWrite,
 } from './context.ts'
@@ -38,13 +37,16 @@ function shipName(shipId: string): string {
   return getShip(shipId).name
 }
 
-/** Checks whether removing/sinking ships eliminated an owner's fleet, and if so, applies elimination consequences. Returns true if the round should end now (all but one eliminated). */
-function checkEliminationAndMaybeEndRound(ctx: GameContext, ownerId: string): boolean {
+/** Checks whether removing/sinking ships eliminated an owner's fleet, and if so, applies
+    elimination consequences (hand discarded, pending squadron discarded, is_eliminated_this_round
+    set). Whether the round should actually end now is re-derived separately by
+    maybeEndRoundOnly/finishTurnAction - this function only applies the consequences. */
+function checkEliminationAndMaybeEndRound(ctx: GameContext, ownerId: string): void {
   const force = requireForce(ctx, ownerId)
-  if (!engine.isFleetEliminated(force)) return false
+  if (!engine.isFleetEliminated(force)) return
 
   const player = findPlayer(ctx, ownerId)
-  if (player.is_eliminated_this_round) return false // already processed
+  if (player.is_eliminated_this_round) return // already processed
 
   player.is_eliminated_this_round = true
   markPlayerDirty(ctx, ownerId)
@@ -64,8 +66,6 @@ function checkEliminationAndMaybeEndRound(ctx: GameContext, ownerId: string): bo
     ctx.game.discard_pile = [...ctx.game.discard_pile, sq.card_id]
     queueWrite(ctx, () => ctx.db.from('destroyer_squadrons').delete().eq('id', sq.id))
   }
-
-  return engine.countActive(ctx.players) === 1
 }
 
 // ───────────────────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ async function handleAddBot(ctx: GameContext, callerId: string) {
   const bot = BOT_PROFILES.find((b) => !usedBotIds.has(b.id))
   if (!bot) throw new HttpError(400, 'No more bots available')
 
-  const seat = ctx.players.length
+  const seat = ctx.players.length > 0 ? Math.max(...ctx.players.map((p) => p.seat_index)) + 1 : 0
   const { error: playerErr } = await ctx.db
     .from('game_players')
     .insert({ game_id: game.id, user_id: bot.id, seat_index: seat, display_name: bot.name, is_bot: true })
@@ -95,6 +95,9 @@ async function handleAddBot(ctx: GameContext, callerId: string) {
   if (forceErr) throw forceErr
 
   log(ctx, seat, `${bot.name} joined as an AI opponent.`)
+  // Bumps games.version even though no public field changes - this is add_bot's only
+  // guard against racing another concurrent lobby action (e.g. a second add_bot call).
+  markGameDirty(ctx)
   await saveContext(ctx)
   return { userId: bot.id, seatIndex: seat }
 }
@@ -108,7 +111,8 @@ async function handleDraw(ctx: GameContext, callerId: string) {
   if (game.status !== 'in_progress') throw new HttpError(400, 'Not in normal play')
   const seat = seatOf(ctx, callerId)
   if (game.turn_seat !== seat) throw new HttpError(403, "It's not your turn")
-  if (game.pending_drawn_card) throw new HttpError(400, 'Resolve your drawn card first')
+  const hand = requireHand(ctx, callerId)
+  if (hand.pending_card) throw new HttpError(400, 'Resolve your drawn card first')
   if (ctx.destroyerSquadrons.some((s) => s.owner_id === callerId)) {
     throw new HttpError(400, 'Resolve your Destroyer Squadron attack first')
   }
@@ -130,14 +134,15 @@ async function handleDraw(ctx: GameContext, callerId: string) {
       await finishTurnAction(ctx)
       return { drawnCard: cardId, resolved: true, discardedNoTarget: true }
     }
-    game.pending_drawn_card = cardId
+    hand.pending_card = cardId
+    markHandDirty(ctx, callerId)
+    game.has_pending_card = true
     log(ctx, seat, `${nameOf(ctx, callerId)} drew ${describeCard(cardId)} - must resolve it now.`)
     await saveContext(ctx)
     return { drawnCard: cardId, resolved: false }
   }
 
   // Normal card: goes into hand, turn is NOT over yet - player still acts.
-  const hand = requireHand(ctx, callerId)
   hand.cards = [...hand.cards, cardId]
   markHandDirty(ctx, callerId)
   log(ctx, seat, `${nameOf(ctx, callerId)} drew a card.`)
@@ -215,15 +220,22 @@ async function handlePlay(ctx: GameContext, callerId: string, payload: GameActio
   const cardId = payload.cardId
   if (!cardId) throw new HttpError(400, 'cardId is required')
   const card = getPlayCard(cardId)
+  const hand = requireHand(ctx, callerId)
 
-  if (game.pending_drawn_card) {
-    if (game.pending_drawn_card !== cardId) {
+  if (ctx.destroyerSquadrons.some((s) => s.owner_id === callerId)) {
+    throw new HttpError(400, 'Resolve your Destroyer Squadron attack first')
+  }
+
+  if (hand.pending_card) {
+    if (hand.pending_card !== cardId) {
       throw new HttpError(400, 'You must resolve the card you just drew first')
     }
     if (game.turn_seat !== seat || game.status !== 'in_progress') {
       throw new HttpError(403, "It's not your turn")
     }
-    game.pending_drawn_card = null
+    hand.pending_card = null
+    markHandDirty(ctx, callerId)
+    game.has_pending_card = false
     markGameDirty(ctx)
     applyCardEffect(ctx, callerId, cardId, payload)
     await finishTurnAction(ctx)
@@ -235,7 +247,6 @@ async function handlePlay(ctx: GameContext, callerId: string, payload: GameActio
     if (!SPECIAL_PHASE_TYPES.has(card.type)) {
       throw new HttpError(400, 'Only red special cards can be played during setup')
     }
-    const hand = requireHand(ctx, callerId)
     if (!hand.cards.includes(cardId)) throw new HttpError(400, "That card isn't in your hand")
     if (card.type === 'minefield') {
       const force = opponentForce(ctx, callerId, payload.target?.targetOwnerId)
@@ -259,7 +270,6 @@ async function handlePlay(ctx: GameContext, callerId: string, payload: GameActio
   if (SPECIAL_PHASE_TYPES.has(card.type)) {
     throw new HttpError(400, 'That card must be resolved immediately when drawn, not played from hand')
   }
-  const hand = requireHand(ctx, callerId)
   if (!hand.cards.includes(cardId)) throw new HttpError(400, "That card isn't in your hand")
   hand.cards = hand.cards.filter((c) => c !== cardId)
   markHandDirty(ctx, callerId)
@@ -457,6 +467,9 @@ async function handleDiscard(ctx: GameContext, callerId: string, payload: GameAc
   const seat = seatOf(ctx, callerId)
   if (game.status !== 'in_progress') throw new HttpError(400, 'Not in normal play')
   if (game.turn_seat !== seat) throw new HttpError(403, "It's not your turn")
+  if (ctx.destroyerSquadrons.some((s) => s.owner_id === callerId)) {
+    throw new HttpError(400, 'Resolve your Destroyer Squadron attack first')
+  }
   if (!payload.cardId) throw new HttpError(400, 'cardId is required')
   const hand = requireHand(ctx, callerId)
   if (!hand.cards.includes(payload.cardId)) throw new HttpError(400, "That card isn't in your hand")
@@ -537,7 +550,17 @@ async function handleAirstrike(ctx: GameContext, callerId: string, payload: Game
   if (strikes.length === 0) throw new HttpError(400, 'Declare at least one strike')
 
   const myForce = requireForce(ctx, callerId)
+  const liveCarrierCount = myForce.ships.filter((sh) => !sh.sunk && getShip(sh.shipId).isCarrier).length
+  if (strikes.length > liveCarrierCount) {
+    throw new HttpError(400, 'You cannot declare more strikes than you have live carriers')
+  }
+
+  const usedCarriers = new Set<string>()
   for (const s of strikes) {
+    if (usedCarriers.has(s.carrierShipId)) {
+      throw new HttpError(400, 'Each carrier can only launch one strike per turn')
+    }
+    usedCarriers.add(s.carrierShipId)
     const carrier = myForce.ships.find((sh) => sh.shipId === s.carrierShipId)
     if (!carrier || carrier.sunk) throw new HttpError(400, 'You do not own that carrier')
     if (!getShip(s.carrierShipId).isCarrier) throw new HttpError(400, 'That ship is not a carrier')
@@ -586,6 +609,9 @@ async function handleResolveDestroyer(ctx: GameContext, callerId: string, payloa
   if (!resolution) throw new HttpError(400, 'destroyerResolution is required')
 
   const force = opponentForce(ctx, callerId, resolution.targetOwnerId)
+  if (resolution.priorityShipIds.length > force.ships.length) {
+    throw new HttpError(400, 'Too many ships listed')
+  }
   const roll = engine.rollDie()
   // The attack is mandatory even if the chosen fleet turns out to be smoked - it just
   // has no effect, same as any other action smoke blocks (only Submarines and
@@ -671,6 +697,7 @@ async function endRound(ctx: GameContext) {
   for (const d of deltas) {
     const p = findPlayer(ctx, d.userId)
     p.total_score += d.total
+    markPlayerDirty(ctx, d.userId)
   }
   for (const p of ctx.players) {
     log(
@@ -690,7 +717,6 @@ async function endRound(ctx: GameContext) {
     game.status = 'finished'
     log(ctx, leaders[0].seat_index, `${leaders[0].display_name} wins the game with ${maxScore} points!`)
     markGameDirty(ctx)
-    await savePlayerScores(ctx.db, game.id, ctx.players)
     await saveContext(ctx)
     return
   }
@@ -724,12 +750,10 @@ async function endRound(ctx: GameContext) {
   game.draw_pile = dealt.drawPile
   game.harbor_pile = dealt.harborPile
   game.discard_pile = []
-  game.pending_drawn_card = null
   game.drawn_this_turn = false
   markGameDirty(ctx)
   log(ctx, newDealer.seat_index, `Round ${game.current_round} begins. ${newDealer.display_name} deals.`)
 
-  await savePlayerScores(ctx.db, game.id, ctx.players)
   await saveContext(ctx)
 }
 

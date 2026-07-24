@@ -27,7 +27,7 @@
 import { getShip, getPlayCard } from './cards.ts'
 import * as engine from './engine.ts'
 import type {
-  GameRow,
+  GameState,
   GamePlayerRow,
   HandRow,
   TaskForceRow,
@@ -48,7 +48,7 @@ export const BOT_PROFILES = [
 /** The read-only slice of a GameContext the AI needs. GameContext is
     structurally assignable to this, so the server loop can pass its ctx directly. */
 export interface BotView {
-  game: GameRow
+  game: GameState
   players: GamePlayerRow[]
   hands: Map<string, HandRow>
   taskForces: Map<string, TaskForceRow>
@@ -632,8 +632,9 @@ function chooseNormalTurnAction(
   }
 
   // 2. A just-drawn immediate special must be resolved now.
-  if (view.game.pending_drawn_card) {
-    return resolvePendingCard(view, botUserId, view.game.pending_drawn_card)
+  const pendingCard = view.hands.get(botUserId)?.pending_card
+  if (pendingCard) {
+    return resolvePendingCard(view, botUserId, pendingCard)
   }
 
   // 4 (computed early). Every legal terminal play from the current hand — needed
@@ -687,7 +688,7 @@ function resolvePendingCard(view: BotView, botUserId: string, cardId: string): G
 
   const top = best(cands)
   if (top) return top.payload
-  // Shouldn't happen — the engine only sets pending_drawn_card when a legal
+  // Shouldn't happen — the engine only sets hand.pending_card when a legal
   // target exists — but fail safe by playing with an empty target.
   return { gameId: view.game.id, type: 'play', cardId, target: {} }
 }

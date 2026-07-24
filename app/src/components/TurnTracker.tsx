@@ -5,7 +5,7 @@ function phaseLabel(game: GameRow, activePlayer: GamePlayerRow | undefined, dest
   if (game.status === 'in_progress') {
     const activeSquadron = activePlayer && destroyerSquadrons.some((s) => s.owner_id === activePlayer.user_id)
     if (activeSquadron) return 'Resolving Destroyer Squadron'
-    if (game.pending_drawn_card) return 'Resolving Drawn Card'
+    if (game.has_pending_card) return 'Resolving Drawn Card'
     return 'Turn in Progress'
   }
   return null

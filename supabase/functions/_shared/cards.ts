@@ -1,4 +1,5 @@
 import cardsJson from './cards.json' with { type: 'json' }
+import { HttpError } from './supabaseAdmin.ts'
 
 export type ShipCard = {
   id: string
@@ -60,13 +61,13 @@ export const SPECIAL_PHASE_TYPES = new Set<PlayCardType>([
 
 export function getShip(id: string): ShipCard {
   const s = shipById.get(id)
-  if (!s) throw new Error(`Unknown ship card: ${id}`)
+  if (!s) throw new HttpError(400, `Unknown ship card: ${id}`)
   return s
 }
 
 export function getPlayCard(id: string): PlayCard {
   const p = playById.get(id)
-  if (!p) throw new Error(`Unknown play card: ${id}`)
+  if (!p) throw new HttpError(400, `Unknown play card: ${id}`)
   return p
 }
 

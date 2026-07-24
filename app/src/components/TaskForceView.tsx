@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { getShip } from '../lib/cards'
 import { CardImage } from './CardImage'
 import { ShipTooltip } from './ShipTooltip'
@@ -73,7 +73,7 @@ function ShipCard({
   )
 }
 
-export function TaskForceView({
+export const TaskForceView = memo(function TaskForceView({
   force,
   ownerName,
   isMine,
@@ -128,4 +128,4 @@ export function TaskForceView({
       </div>
     </div>
   )
-}
+})

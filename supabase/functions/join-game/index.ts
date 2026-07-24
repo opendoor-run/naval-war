@@ -9,6 +9,7 @@ Deno.serve(async (req) => {
     const displayName = String(body.displayName ?? '').trim()
     if (!inviteToken) throw new HttpError(400, 'inviteToken is required')
     if (!displayName) throw new HttpError(400, 'displayName is required')
+    if (displayName.length > 32) throw new HttpError(400, 'displayName must be at most 32 characters')
 
     const db = adminClient()
 
@@ -41,17 +42,24 @@ Deno.serve(async (req) => {
       throw new HttpError(400, 'This game has already started')
     }
 
-    const { count, error: countErr } = await db
-      .from('game_players')
-      .select('user_id', { count: 'exact', head: true })
-      .eq('game_id', game.id)
-    if (countErr) throw countErr
-    if ((count ?? 0) >= game.max_players) throw new HttpError(400, 'This game is full')
+    // Two simultaneous joiners can both read the same count before either inserts - retry
+    // with a fresh count if we lose that race (unique (game_id, seat_index) rejects us)
+    // instead of surfacing a raw constraint-violation 500.
+    const MAX_SEAT_ATTEMPTS = 5
+    for (let attempt = 1; ; attempt++) {
+      const { count, error: countErr } = await db
+        .from('game_players')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('game_id', game.id)
+      if (countErr) throw countErr
+      if ((count ?? 0) >= game.max_players) throw new HttpError(400, 'This game is full')
 
-    const { error: playerErr } = await db
-      .from('game_players')
-      .insert({ game_id: game.id, user_id: callerId, seat_index: count ?? 0, display_name: displayName })
-    if (playerErr) throw playerErr
+      const { error: playerErr } = await db
+        .from('game_players')
+        .insert({ game_id: game.id, user_id: callerId, seat_index: count ?? 0, display_name: displayName })
+      if (!playerErr) break
+      if (playerErr.code !== '23505' || attempt >= MAX_SEAT_ATTEMPTS) throw playerErr
+    }
 
     const { error: handErr } = await db.from('hands').insert({ game_id: game.id, user_id: callerId, cards: [] })
     if (handErr) throw handErr

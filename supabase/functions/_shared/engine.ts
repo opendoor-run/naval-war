@@ -1,4 +1,5 @@
 import { getShip, getPlayCard, allShipIds, allPlayCardIds } from './cards.ts'
+import { HttpError } from './supabaseAdmin.ts'
 import type {
   TaskForceRow,
   ShipState,
@@ -138,9 +139,9 @@ export function fireSalvo(
   allForces: Map<string, TaskForceRow>
 ): { sunk: boolean } {
   const card = getPlayCard(salvoCardId)
-  if (card.type !== 'salvo') throw new Error('Not a salvo card')
+  if (card.type !== 'salvo') throw new HttpError(400, 'Not a salvo card')
   const ship = force.ships.find((s) => s.shipId === shipId)
-  if (!ship) throw new Error('Target ship not in that task force')
+  if (!ship) throw new HttpError(400, 'Target ship not in that task force')
   ship.salvos.push({
     id: salvoCardId,
     gunSize: card.gunSize!,
@@ -161,11 +162,11 @@ export function applyAdditionalDamage(
   allForces: Map<string, TaskForceRow>
 ): { sunk: boolean } {
   const dmgCard = getPlayCard(damageCardId)
-  if (dmgCard.type !== 'additional_damage') throw new Error('Not an additional damage card')
+  if (dmgCard.type !== 'additional_damage') throw new HttpError(400, 'Not an additional damage card')
   const ship = force.ships.find((s) => s.shipId === shipId)
-  if (!ship) throw new Error('Target ship not in that task force')
+  if (!ship) throw new HttpError(400, 'Target ship not in that task force')
   const salvo = ship.salvos.find((s) => s.id === targetSalvoCardId)
-  if (!salvo) throw new Error('That salvo card is not attached to this ship')
+  if (!salvo) throw new HttpError(400, 'That salvo card is not attached to this ship')
   salvo.additionalDamage.push({ id: damageCardId, damage: dmgCard.damage!, playedBy })
   const sunk = dealDamage(force, shipId, dmgCard.damage!, playedBy, allForces)
   return { sunk }
@@ -174,9 +175,10 @@ export function applyAdditionalDamage(
 /** Removes a salvo stack (and any Additional Damage on it) from a ship. Returns the card ids that should go to the discard pile. */
 export function repairShip(force: TaskForceRow, shipId: string, targetSalvoCardId: string): string[] {
   const ship = force.ships.find((s) => s.shipId === shipId)
-  if (!ship) throw new Error('Ship not in that task force')
+  if (!ship) throw new HttpError(400, 'Ship not in that task force')
+  if (ship.sunk) throw new HttpError(400, 'Cannot repair a sunk ship')
   const idx = ship.salvos.findIndex((s) => s.id === targetSalvoCardId)
-  if (idx === -1) throw new Error('That salvo card is not attached to this ship')
+  if (idx === -1) throw new HttpError(400, 'That salvo card is not attached to this ship')
   const [removed] = ship.salvos.splice(idx, 1)
   const removedTotal =
     removed.damage + removed.additionalDamage.reduce((a, d) => a + d.damage, 0)
@@ -192,7 +194,7 @@ export function placeMinefield(
   allForces: Map<string, TaskForceRow>
 ): string[] {
   const card = getPlayCard(minefieldCardId)
-  if (card.type !== 'minefield') throw new Error('Not a minefield card')
+  if (card.type !== 'minefield') throw new HttpError(400, 'Not a minefield card')
   force.minefields.push({ id: minefieldCardId, damage: card.damage!, placedBy })
   const sunk: string[] = []
   for (const ship of force.ships) {
@@ -232,7 +234,7 @@ export function resolveRollAttack(
   const threshold = attackType === 'submarine' ? 5 : 6
   if (roll < threshold) return { sunk: false }
   const ship = force.ships.find((s) => s.shipId === shipId)
-  if (!ship) throw new Error('Target ship not in that task force')
+  if (!ship) throw new HttpError(400, 'Target ship not in that task force')
   ship.sunk = true
   ship.sunkBy = attackedBy
   allForces.get(attackedBy)?.deep_six.push(shipId)
@@ -249,7 +251,7 @@ export function resolveAirstrike(
 ): { sunk: boolean } {
   if (roll !== 1) return { sunk: false }
   const ship = force.ships.find((s) => s.shipId === shipId)
-  if (!ship) throw new Error('Target ship not in that task force')
+  if (!ship) throw new HttpError(400, 'Target ship not in that task force')
   ship.sunk = true
   ship.sunkBy = attackedBy
   allForces.get(attackedBy)?.deep_six.push(shipId)
@@ -267,8 +269,10 @@ export function resolveDestroyerAttack(
   const sunk: string[] = []
   for (const shipId of priorityShipIds) {
     if (sunk.length >= count) break
-    const ship = force.ships.find((s) => s.shipId === shipId)
-    if (!ship || ship.sunk) continue
+    // isTargetable already excludes sunk ships and enforces the carrier-protection rule
+    // (a carrier can't be targeted while any other ship in the fleet is still afloat).
+    if (!isTargetable(force, shipId)) continue
+    const ship = force.ships.find((s) => s.shipId === shipId)!
     ship.sunk = true
     ship.sunkBy = attackedBy
     allForces.get(attackedBy)?.deep_six.push(shipId)

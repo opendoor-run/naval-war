@@ -116,6 +116,7 @@ alter table game_log enable row level security;
 create policy "profiles readable by any signed-in user" on profiles
   for select to authenticated using (true);
 
+drop policy if exists "profiles editable by owner" on profiles;
 create policy "profiles editable by owner" on profiles
   for insert to authenticated with check (id = auth.uid());
 
@@ -127,18 +128,23 @@ create policy "profiles updatable by owner" on profiles
 create policy "games readable by signed-in users" on games
   for select to authenticated using (true);
 
+drop policy if exists "game_players readable by game members" on game_players;
 create policy "game_players readable by game members" on game_players
   for select to authenticated using (is_game_member(game_id));
 
+drop policy if exists "hands readable by owner only" on hands;
 create policy "hands readable by owner only" on hands
   for select to authenticated using (user_id = auth.uid());
 
+drop policy if exists "task_forces readable by game members" on task_forces;
 create policy "task_forces readable by game members" on task_forces
   for select to authenticated using (is_game_member(game_id));
 
+drop policy if exists "destroyer_squadrons readable by game members" on destroyer_squadrons;
 create policy "destroyer_squadrons readable by game members" on destroyer_squadrons
   for select to authenticated using (is_game_member(game_id));
 
+drop policy if exists "game_log readable by game members" on game_log;
 create policy "game_log readable by game members" on game_log
   for select to authenticated using (is_game_member(game_id));
 

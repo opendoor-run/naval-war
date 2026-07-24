@@ -36,10 +36,10 @@ const mockGameBoard: GameRow = {
   dealer_seat: 1,
   turn_seat: 0,
   special_phase_seat: null,
-  draw_pile: new Array(42).fill('x'),
-  discard_pile: new Array(11).fill('x'),
-  harbor_pile: new Array(19).fill('x'),
-  pending_drawn_card: null,
+  draw_count: 42,
+  discard_count: 11,
+  harbor_count: 19,
+  has_pending_card: false,
   drawn_this_turn: false,
   version: 1,
 }
@@ -50,6 +50,7 @@ const mockHand: HandRow = {
   game_id: 'preview',
   user_id: ME,
   cards: ['play-007', 'play-019', 'play-036', 'play-050', 'play-012', 'play-034'],
+  pending_card: null,
 }
 
 const mockTaskForces: Record<string, TaskForceRow> = {

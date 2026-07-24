@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { startGame, deleteGame, gameAction } from '../lib/api'
 import { AppHeader } from './AppHeader'
-import { InstructionsModal } from './InstructionsModal'
 import type { GameRow, GamePlayerRow } from '../types/game'
+
+const InstructionsModal = lazy(() =>
+  import('./InstructionsModal').then((m) => ({ default: m.InstructionsModal }))
+)
 
 export function Lobby({
   game,
@@ -23,10 +26,20 @@ export function Lobby({
 
   const inviteUrl = `${window.location.origin}/join/${game.invite_token}`
 
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => {
+    return () => clearTimeout(copiedTimeoutRef.current)
+  }, [])
+
   async function copyLink() {
-    await navigator.clipboard.writeText(inviteUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      setCopied(true)
+      clearTimeout(copiedTimeoutRef.current)
+      copiedTimeoutRef.current = setTimeout(() => setCopied(false), 1500)
+    } catch (e) {
+      console.error('Lobby: failed to copy invite link', e)
+    }
   }
 
   async function handleStart() {
@@ -160,7 +173,11 @@ export function Lobby({
           <p className="ptc-mono text-center text-sm text-[var(--ink-soft)]">Waiting for the host to start the game...</p>
         )}
       </div>
-      {showRules && <InstructionsModal onClose={() => setShowRules(false)} />}
+      {showRules && (
+        <Suspense fallback={null}>
+          <InstructionsModal onClose={() => setShowRules(false)} />
+        </Suspense>
+      )}
     </div>
   )
 }

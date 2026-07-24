@@ -54,6 +54,7 @@ export default function JoinPage() {
           value={nameInput}
           onChange={(e) => setNameInput(e.target.value)}
           placeholder="Admiral Nelson"
+          maxLength={32}
           onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
         />
         {error && (

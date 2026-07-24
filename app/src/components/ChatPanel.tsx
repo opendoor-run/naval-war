@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import type { ChatMessageRow, GamePlayerRow } from '../types/game'
 
-export function ChatPanel({
+export const ChatPanel = memo(function ChatPanel({
   messages,
   players,
   myUserId,
@@ -78,4 +78,4 @@ export function ChatPanel({
       </div>
     </div>
   )
-}
+})

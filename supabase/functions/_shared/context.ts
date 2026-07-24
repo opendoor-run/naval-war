@@ -2,6 +2,7 @@ import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2'
 import { HttpError } from './supabaseAdmin.ts'
 import type {
   GameRow,
+  GameState,
   GamePlayerRow,
   HandRow,
   TaskForceRow,
@@ -10,7 +11,7 @@ import type {
 
 export interface GameContext {
   db: SupabaseClient
-  game: GameRow
+  game: GameState
   players: GamePlayerRow[]
   hands: Map<string, HandRow>
   taskForces: Map<string, TaskForceRow>
@@ -32,12 +33,19 @@ export interface GameContext {
 }
 
 export async function loadContext(db: SupabaseClient, gameId: string): Promise<GameContext> {
-  const [{ data: game, error: gameErr }, { data: players, error: playersErr }] = await Promise.all([
+  const [
+    { data: game, error: gameErr },
+    { data: secrets, error: secretsErr },
+    { data: players, error: playersErr },
+  ] = await Promise.all([
     db.from('games').select('*').eq('id', gameId).maybeSingle(),
+    db.from('game_secrets').select('*').eq('game_id', gameId).maybeSingle(),
     db.from('game_players').select('*').eq('game_id', gameId).order('seat_index'),
   ])
   if (gameErr) throw gameErr
   if (!game) throw new HttpError(404, 'Game not found')
+  if (secretsErr) throw secretsErr
+  if (!secrets) throw new HttpError(500, 'Missing game_secrets row')
   if (playersErr) throw playersErr
 
   const [{ data: hands, error: handsErr }, { data: taskForces, error: tfErr }, { data: squads, error: sqErr }] =
@@ -50,9 +58,16 @@ export async function loadContext(db: SupabaseClient, gameId: string): Promise<G
   if (tfErr) throw tfErr
   if (sqErr) throw sqErr
 
+  const mergedGame: GameState = {
+    ...(game as GameRow),
+    draw_pile: secrets.draw_pile,
+    discard_pile: secrets.discard_pile,
+    harbor_pile: secrets.harbor_pile,
+  }
+
   return {
     db,
-    game: game as GameRow,
+    game: mergedGame,
     players: (players ?? []) as GamePlayerRow[],
     hands: new Map((hands ?? []).map((h: HandRow) => [h.user_id, h])),
     taskForces: new Map((taskForces ?? []).map((t: TaskForceRow) => [t.owner_id, t])),
@@ -116,7 +131,7 @@ export async function saveContext(ctx: GameContext) {
     const nextVersion = game.version + 1
     const { data, error } = await db
       .from('games')
-      .update({ ...gameUpdatePayload(game), version: nextVersion })
+      .update({ ...gamePublicUpdatePayload(game), version: nextVersion })
       .eq('id', game.id)
       .eq('version', game.version)
       .select('id')
@@ -125,42 +140,58 @@ export async function saveContext(ctx: GameContext) {
       throw new HttpError(409, 'Game state changed elsewhere, please retry')
     }
     game.version = nextVersion
+
+    const { error: secretsErr } = await db
+      .from('game_secrets')
+      .update(gameSecretsPayload(game))
+      .eq('game_id', game.id)
+    if (secretsErr) throw secretsErr
   }
 
-  for (const userId of ctx.dirty.hands) {
-    const hand = ctx.hands.get(userId)!
-    const { error } = await db
-      .from('hands')
-      .update({ cards: hand.cards })
-      .eq('game_id', game.id)
-      .eq('user_id', userId)
-    if (error) throw error
-  }
+  // These three loops write disjoint rows (keyed by user_id/owner_id), so there's no
+  // ordering dependency between iterations - run each loop's writes concurrently instead
+  // of one round trip at a time. A round-end that dirties every hand and task force turns
+  // 9 + 9 sequential round trips into 2.
+  await Promise.all(
+    Array.from(ctx.dirty.hands).map(async (userId) => {
+      const hand = ctx.hands.get(userId)!
+      const { error } = await db
+        .from('hands')
+        .update({ cards: hand.cards })
+        .eq('game_id', game.id)
+        .eq('user_id', userId)
+      if (error) throw error
+    })
+  )
 
-  for (const userId of ctx.dirty.taskForces) {
-    const force = ctx.taskForces.get(userId)!
-    const { error } = await db
-      .from('task_forces')
-      .update({
-        ships: force.ships,
-        minefields: force.minefields,
-        smoke_active: force.smoke_active,
-        deep_six: force.deep_six,
-      })
-      .eq('game_id', game.id)
-      .eq('owner_id', userId)
-    if (error) throw error
-  }
+  await Promise.all(
+    Array.from(ctx.dirty.taskForces).map(async (userId) => {
+      const force = ctx.taskForces.get(userId)!
+      const { error } = await db
+        .from('task_forces')
+        .update({
+          ships: force.ships,
+          minefields: force.minefields,
+          smoke_active: force.smoke_active,
+          deep_six: force.deep_six,
+        })
+        .eq('game_id', game.id)
+        .eq('owner_id', userId)
+      if (error) throw error
+    })
+  )
 
-  for (const userId of ctx.dirty.players) {
-    const player = ctx.players.find((p) => p.user_id === userId)!
-    const { error } = await db
-      .from('game_players')
-      .update({ total_score: player.total_score, is_eliminated_this_round: player.is_eliminated_this_round })
-      .eq('game_id', game.id)
-      .eq('user_id', userId)
-    if (error) throw error
-  }
+  await Promise.all(
+    Array.from(ctx.dirty.players).map(async (userId) => {
+      const player = ctx.players.find((p) => p.user_id === userId)!
+      const { error } = await db
+        .from('game_players')
+        .update({ total_score: player.total_score, is_eliminated_this_round: player.is_eliminated_this_round })
+        .eq('game_id', game.id)
+        .eq('user_id', userId)
+      if (error) throw error
+    })
+  )
 
   if (ctx.logEntries.length > 0) {
     const { error } = await db
@@ -176,29 +207,26 @@ export async function saveContext(ctx: GameContext) {
   ctx.pendingWrites = []
 }
 
-function gameUpdatePayload(game: GameRow) {
+function gamePublicUpdatePayload(game: GameState) {
   return {
     status: game.status,
     current_round: game.current_round,
     dealer_seat: game.dealer_seat,
     turn_seat: game.turn_seat,
     special_phase_seat: game.special_phase_seat,
-    draw_pile: game.draw_pile,
-    discard_pile: game.discard_pile,
-    harbor_pile: game.harbor_pile,
-    pending_drawn_card: game.pending_drawn_card,
     drawn_this_turn: game.drawn_this_turn,
+    has_pending_card: game.has_pending_card,
     target_score: game.target_score,
+    draw_count: game.draw_pile.length,
+    discard_count: game.discard_pile.length,
+    harbor_count: game.harbor_pile.length,
   }
 }
 
-export async function savePlayerScores(db: SupabaseClient, gameId: string, players: GamePlayerRow[]) {
-  for (const p of players) {
-    const { error } = await db
-      .from('game_players')
-      .update({ total_score: p.total_score, is_eliminated_this_round: p.is_eliminated_this_round })
-      .eq('game_id', gameId)
-      .eq('user_id', p.user_id)
-    if (error) throw error
+function gameSecretsPayload(game: GameState) {
+  return {
+    draw_pile: game.draw_pile,
+    discard_pile: game.discard_pile,
+    harbor_pile: game.harbor_pile,
   }
 }

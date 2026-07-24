@@ -11,10 +11,10 @@ export interface GameRow {
   dealer_seat: number | null
   turn_seat: number | null
   special_phase_seat: number | null
-  draw_pile: string[]
-  discard_pile: string[]
-  harbor_pile: string[]
-  pending_drawn_card: string | null
+  draw_count: number
+  discard_count: number
+  harbor_count: number
+  has_pending_card: boolean
   drawn_this_turn: boolean
   version: number
 }
@@ -33,6 +33,7 @@ export interface HandRow {
   game_id: string
   user_id: string
   cards: string[]
+  pending_card: string | null
 }
 
 export interface AdditionalDamage {

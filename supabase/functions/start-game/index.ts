@@ -31,6 +31,37 @@ Deno.serve(async (req) => {
     const dealt = dealNewGame(seated)
     const hostSeat = seated.find((p) => p.user_id === callerId)!.seat_index
 
+    // Flip status out of 'lobby' under the version CAS first - that's the lock. A second
+    // concurrent start-game call (double-click, or a client retry) will lose this update
+    // (0 rows matched) and get a clean 409, instead of silently re-dealing and clobbering
+    // every hand a moment after the winner already wrote its own deal.
+    const { data: updated, error: updateErr } = await db
+      .from('games')
+      .update({
+        status: 'special_phase',
+        dealer_seat: hostSeat,
+        special_phase_seat: hostSeat,
+        turn_seat: null,
+        current_round: 1,
+        draw_count: dealt.drawPile.length,
+        harbor_count: dealt.harborPile.length,
+        discard_count: 0,
+        version: game.version + 1,
+      })
+      .eq('id', gameId)
+      .eq('version', game.version)
+      .select('id')
+    if (updateErr) throw updateErr
+    if (!updated || updated.length === 0) {
+      throw new HttpError(409, 'Game state changed elsewhere, please retry')
+    }
+
+    const { error: secretsErr } = await db
+      .from('game_secrets')
+      .update({ draw_pile: dealt.drawPile, harbor_pile: dealt.harborPile, discard_pile: [] })
+      .eq('game_id', gameId)
+    if (secretsErr) throw secretsErr
+
     for (const p of seated) {
       const { error: handErr } = await db
         .from('hands')
@@ -51,24 +82,6 @@ Deno.serve(async (req) => {
         .eq('owner_id', p.user_id)
       if (forceErr) throw forceErr
     }
-
-    const { error: updateErr } = await db
-      .from('games')
-      .update({
-        status: 'special_phase',
-        dealer_seat: hostSeat,
-        special_phase_seat: hostSeat,
-        turn_seat: null,
-        draw_pile: dealt.drawPile,
-        harbor_pile: dealt.harborPile,
-        discard_pile: [],
-        pending_drawn_card: null,
-        current_round: 1,
-        version: game.version + 1,
-      })
-      .eq('id', gameId)
-      .eq('version', game.version)
-    if (updateErr) throw updateErr
 
     const dealerName = seated.find((p) => p.seat_index === hostSeat)!.display_name
     const { error: logErr } = await db

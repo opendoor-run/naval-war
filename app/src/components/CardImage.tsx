@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { getShip, getPlayCard, cardImageUrl, CARD_TYPE_LABELS, CARD_TYPE_DESCRIPTIONS } from '../lib/cards'
 
 function statText(cardId: string): string {
@@ -35,7 +36,7 @@ function playCardSubText(cardId: string): string {
   return ''
 }
 
-export function CardImage({
+export const CardImage = memo(function CardImage({
   cardId,
   selected,
   dim,
@@ -72,6 +73,7 @@ export function CardImage({
             className="h-[125%] w-full object-cover object-center"
             style={{ transform: 'translateY(-8%)' }}
             draggable={false}
+            loading="lazy"
           />
         </div>
         {statText(cardId) && (
@@ -108,4 +110,4 @@ export function CardImage({
       )}
     </div>
   )
-}
+})
